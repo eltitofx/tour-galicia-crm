@@ -1,4 +1,12 @@
 {
+  "departure_pickup": {
+    "es": "👋 Hola *{nombre}*,\n\nTe contactamos desde *{empresa}* para confirmarte los detalles de tu excursión *{tour}* de hoy:\n\n📍 *Punto de recogida / Salida:* {parada}\n⏰ *Hora de encuentro:* *{hora}*\n⚠️ _Rogamos estar presentes 10 minutos antes._\n\n🎧 *Audioguía en tu idioma:* {audioguia}\n\nSi tienes cualquier consulta, puedes responder a este mensaje.\n¡Que disfrutes de la experiencia! 🚌✨",
+    "en": "👋 Hello *{nombre}*,\n\nGreetings from *{empresa}*! Here are the departure details for your *{tour}* excursion today:\n\n📍 *Pick-up / Meeting Point:* {parada}\n⏰ *Meeting Time:* *{hora}*\n⚠️ _Please arrive 10 minutes prior to departure._\n\n🎧 *Audioguide in your language:* {audioguia}\n\nIf you have any questions, feel free to reply directly to this WhatsApp message.\nEnjoy your tour! 🚌✨",
+    "fr": "👋 Bonjour *{nombre}*,\n\nDe la part de *{empresa}* pour vous confirmer les détails de votre excursion *{tour}* d'aujourd'hui :\n\n📍 *Point de rendez-vous / Prise en charge :* {parada}\n⏰ *Heure de rendez-vous :* *{hora}*\n⚠️ _Merci de vous présenter 10 minutes avant._\n\n🎧 *Audioguide en français :* {audioguia}\n\nBonne visite avec nous ! 🚌✨",
+    "de": "👋 Hallo *{nombre}*,\n\nhier ist *{empresa}* mit den Details für Ihren Ausflug *{tour}* heute:\n\n📍 *Treffpunkt / Abholung:* {parada}\n⏰ *Abfahrtszeit:* *{hora}* Uhr\n⚠️ _Bitte seien Sie 10 Minuten vor Abfahrt vor Ort._\n\n🎧 *Audioguide auf Deutsch:* {audioguia}\n\nWir wünschen Ihnen ein tolles Erlebnis! 🚌✨",
+    "pt": "👋 Olá *{nombre}*,\n\nContactamos da *{empresa}* para confirmar os detalhes da sua excursão *{tour}* de hoje:\n\n📍 *Ponto de encontro / Paragem:* {parada}\n⏰ *Horário de saída:* *{hora}*\n⚠️ _Pedimos o favor de estar presente com 10 minutos de antecedência._\n\n🎧 *Audioguia em português:* {audioguia}\n\nTenha um excelente passeio! 🚌✨",
+    "it": "👋 Ciao *{nombre}*,\n\nTi contattiamo da *{empresa}* per confermarti i dettagli dell'escursione *{tour}* di oggi:\n\n📍 *Punto di incontro / Fermata:* {parada}\n⏰ *Orario di partenza:* *{hora}*\n⚠️ _Si prega di presentarsi 10 minuti prima._\n\n🎧 *Audioguida in italiano:* {audioguia}\n\nBuona escursione con noi! 🚌✨"
+  },
   "schedule_change": {
     "es": "👋 Hola *{nombre}*, te escribimos de *{empresa}* para avisarte que el tour *{tour}* saldrá a las *{hora}* en *{parada}* por {motivo}.",
     "en": "👋 Hello *{nombre}*, this is *{empresa}*. Tour *{tour}* will depart at *{hora}* from *{parada}* due to {motivo}.",
@@ -6,5 +14,14 @@
     "de": "Hallo",
     "pt": "Olá",
     "it": "Ciao"
-  }
+  },
+  "review_request": {
+    "es": "👋 ¡Hola *{nombre}*!\n\nEsperamos que hayas disfrutado al máximo de tu excursión *{tour}* con *{empresa}* ⭐.\n\nTu opinión es fundamental para nosotros y ayuda a futuros viajeros. ¿Nos regalarías 1 minuto para valorar tu experiencia en *{plataforma}*?\n\n✍️ *Deja tu reseña aquí:* 👇\n👉 {enlace_resena}\n\n¡Muchísimas gracias por viajar con nosotros y esperamos verte pronto de nuevo en Galicia! 💙🚌✨\n— *Equipo de {empresa}*",
+    "en": "👋 Hello *{nombre}*!\n\nWe hope you had a wonderful experience on your *{tour}* tour with *{empresa}* ⭐.\n\nYour feedback means a lot to our team and helps other travelers. Could you take 1 minute to rate your experience on *{plataforma}*?\n\n✍️ *Leave your review here:* 👇\n👉 {enlace_resena}\n\nThank you so much for joining us and we hope to welcome you back to Galicia! 💙🚌✨\n— *{empresa} Team*",
+    "fr": "👋 Bonjour *{nombre}* !\n\nNous espérons que vous avez passé un excellent moment lors de votre excursion *{tour}* avec *{empresa}* ⭐.\n\nVotre avis compte énormément pour nous. Pourriez-vous nous accorder 1 minute pour partager votre expérience sur *{plataforma}* ?\n\n✍️ *Laissez votre avis ici :* 👇\n👉 {enlace_resena}\n\nMerci beaucoup d'avoir voyagé avec nous et à bientôt en Galice ! 💙🚌✨\n— *L'équipe {empresa}*",
+    "de": "👋 Hallo *{nombre}*!\n\nWir hoffen, Sie hatten ein fantastisches Erlebnis bei Ihrem Ausflug *{tour}* mit *{empresa}* ⭐.\n\nIhre Meinung ist uns sehr wichtig. Dürfen wir Sie um 1 Minute für ein kurzes Feedback auf *{plataforma}* bitten?\n\n✍️ *Bewertung hier abgeben:* 👇\n👉 {enlace_resena}\n\nVielen Dank und bis zum nächsten Mal in Galizien! 💙🚌✨\n— *{empresa}*",
+    "pt": "👋 Olá *{nombre}*!\n\nEsperamos que tenha desfrutado ao máximo do seu passeio *{tour}* com a *{empresa}* ⭐.\n\nA sua avaliação é muito importante para nós. Poderia dispensar 1 minuto para partilhar a sua experiência no *{plataforma}*?\n\n✍️ *Deixe a sua avaliação aqui:* 👇\n👉 {enlace_resena}\n\nMuito obrigado por viajar connosco e até breve na Galiza! 💙🚌✨\n— *{empresa}*",
+    "it": "👋 Ciao *{nombre}*!\n\nSperiamo che la tua escursione *{tour}* con *{empresa}* sia stata un'esperienza fantastica ⭐.\n\nLa tua opinione è preziosa per noi e per altri viaggiatori. Ci dedicheresti 1 minuto per lasciare una recensione su *{plataforma}*?\n\n✍️ *Lascia la tua recensione qui:* 👇\n👉 {enlace_resena}\n\nGrazie di cuore per aver viaggiato con noi e a presto in Galizia! 💙🚌✨\n— *{empresa}*"
+  },
+  "custom_templates": []
 }
