@@ -1,0 +1,10 @@
+{
+  "schedule_change": {
+    "es": "👋 Hola *{nombre}*, te escribimos de *{empresa}* para avisarte que el tour *{tour}* saldrá a las *{hora}* en *{parada}* por {motivo}.",
+    "en": "👋 Hello *{nombre}*, this is *{empresa}*. Tour *{tour}* will depart at *{hora}* from *{parada}* due to {motivo}.",
+    "fr": "Bonjour",
+    "de": "Hallo",
+    "pt": "Olá",
+    "it": "Ciao"
+  }
+}

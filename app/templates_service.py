@@ -1,0 +1,290 @@
+import os
+import json
+from pathlib import Path
+from typing import Dict, Any
+
+TEMPLATES_FILE = Path(__file__).resolve().parent.parent / "custom_templates.json"
+
+AUDIOGUIDE_LINKS = {
+    "es": "https://audioguide.tourgalicia.es/es",
+    "en": "https://audioguide.tourgalicia.es/en",
+    "fr": "https://audioguide.tourgalicia.es/fr",
+    "de": "https://audioguide.tourgalicia.es/de",
+    "pt": "https://audioguide.tourgalicia.es/pt",
+    "it": "https://audioguide.tourgalicia.es/it"
+}
+
+REVIEW_LINKS = {
+    "google": "https://g.page/r/TourGalicia/review",
+    "civitatis": "https://www.civitatis.com/es/santiago-de-compostela/",
+    "getyourguide": "https://www.getyourguide.com/account/bookings",
+    "viator": "https://www.tripadvisor.es/UserReviewEdit",
+    "guruwalk": "https://www.guruwalk.com/es/santiago-de-compostela",
+    "freetour": "https://www.freetour.com/es/santiago-de-compostela",
+    "default": "https://g.page/r/TourGalicia/review"
+}
+
+DEFAULT_TEMPLATES = {
+    "departure_pickup": {
+        "es": (
+            "👋 Hola *{nombre}*,\n\n"
+            "Te contactamos desde *{empresa}* para confirmarte los detalles de tu excursión *{tour}* de hoy:\n\n"
+            "📍 *Punto de recogida / Salida:* {parada}\n"
+            "⏰ *Hora de encuentro:* *{hora}*\n"
+            "⚠️ _Rogamos estar presentes 10 minutos antes._\n\n"
+            "🎧 *Audioguía en tu idioma:* {audioguia}\n\n"
+            "Si tienes cualquier consulta, puedes responder a este mensaje.\n"
+            "¡Que disfrutes de la experiencia! 🚌✨"
+        ),
+        "en": (
+            "👋 Hello *{nombre}*,\n\n"
+            "Greetings from *{empresa}*! Here are the departure details for your *{tour}* excursion today:\n\n"
+            "📍 *Pick-up / Meeting Point:* {parada}\n"
+            "⏰ *Meeting Time:* *{hora}*\n"
+            "⚠️ _Please arrive 10 minutes prior to departure._\n\n"
+            "🎧 *Audioguide in your language:* {audioguia}\n\n"
+            "If you have any questions, feel free to reply directly to this WhatsApp message.\n"
+            "Enjoy your tour! 🚌✨"
+        ),
+        "fr": (
+            "👋 Bonjour *{nombre}*,\n\n"
+            "De la part de *{empresa}* pour vous confirmer les détails de votre excursion *{tour}* d'aujourd'hui :\n\n"
+            "📍 *Point de rendez-vous / Prise en charge :* {parada}\n"
+            "⏰ *Heure de rendez-vous :* *{hora}*\n"
+            "⚠️ _Merci de vous présenter 10 minutes avant._\n\n"
+            "🎧 *Audioguide en français :* {audioguia}\n\n"
+            "Bonne visite avec nous ! 🚌✨"
+        ),
+        "de": (
+            "👋 Hallo *{nombre}*,\n\n"
+            "hier ist *{empresa}* mit den Details für Ihren Ausflug *{tour}* heute:\n\n"
+            "📍 *Treffpunkt / Abholung:* {parada}\n"
+            "⏰ *Abfahrtszeit:* *{hora}* Uhr\n"
+            "⚠️ _Bitte seien Sie 10 Minuten vor Abfahrt vor Ort._\n\n"
+            "🎧 *Audioguide auf Deutsch:* {audioguia}\n\n"
+            "Wir wünschen Ihnen ein tolles Erlebnis! 🚌✨"
+        ),
+        "pt": (
+            "👋 Olá *{nombre}*,\n\n"
+            "Contactamos da *{empresa}* para confirmar os detalhes da sua excursão *{tour}* de hoje:\n\n"
+            "📍 *Ponto de encontro / Paragem:* {parada}\n"
+            "⏰ *Horário de saída:* *{hora}*\n"
+            "⚠️ _Pedimos o favor de estar presente com 10 minutos de antecedência._\n\n"
+            "🎧 *Audioguia em português:* {audioguia}\n\n"
+            "Tenha um excelente passeio! 🚌✨"
+        ),
+        "it": (
+            "👋 Ciao *{nombre}*,\n\n"
+            "Ti contattiamo da *{empresa}* per confermarti i dettagli dell'escursione *{tour}* di oggi:\n\n"
+            "📍 *Punto di incontro / Fermata:* {parada}\n"
+            "⏰ *Orario di partenza:* *{hora}*\n"
+            "⚠️ _Si prega di presentarsi 10 minuti prima._\n\n"
+            "🎧 *Audioguida in italiano:* {audioguia}\n\n"
+            "Buona escursione con noi! 🚌✨"
+        )
+    },
+    "schedule_change": {
+        "es": (
+            "👋 Hola *{nombre}*,\n\n"
+            "Te contactamos desde *{empresa}* referente a tu reserva para la excursión *{tour}* de hoy.\n\n"
+            "ℹ️ *Aviso de Horario:*\n"
+            "Por {motivo}, el horario de salida será a las *{hora}*.\n\n"
+            "📍 *Punto de encuentro:* {parada}\n"
+            "⏰ *Nueva hora:* *{hora}* (estar 10 min antes).\n\n"
+            "🎧 *Audioguía en tu idioma:* {audioguia}\n\n"
+            "¡Muchas gracias y nos vemos pronto! 🚌✨\n"
+            "— *Equipo de {empresa}*"
+        ),
+        "en": (
+            "👋 Hello *{nombre}*,\n\n"
+            "We are contacting you from *{empresa}* regarding your booking for the *{tour}* tour today.\n\n"
+            "ℹ️ *Schedule Update:*\n"
+            "Due to {motivo}, your updated departure time is now *{hora}*.\n\n"
+            "📍 *Meeting Point:* {parada}\n"
+            "⏰ *New time:* *{hora}* (please arrive 10 min early).\n\n"
+            "🎧 *Audioguide in your language:* {audioguia}\n\n"
+            "Thank you, see you soon! 🚌✨\n"
+            "— *{empresa} Team*"
+        ),
+        "fr": (
+            "👋 Bonjour *{nombre}*,\n\n"
+            "De la part de *{empresa}* concernant votre réservation pour *{tour}* aujourd'hui.\n\n"
+            "ℹ️ *Mise à jour horaire :*\n"
+            "Pour {motivo}, votre nouvel horaire de départ est à *{hora}*.\n\n"
+            "📍 *Point de rendez-vous :* {parada}\n"
+            "⏰ *Nouvelle heure :* *{hora}* (merci d'arriver 10 min avant).\n\n"
+            "🎧 *Audioguide :* {audioguia}\n\n"
+            "Merci et à très bientôt ! 🚌✨\n"
+            "— *L'équipe {empresa}*"
+        ),
+        "de": (
+            "👋 Hallo *{nombre}*,\n\n"
+            "wir kontaktieren Sie von *{empresa}* bezüglich Ihrer Buchung für *{tour}* heute.\n\n"
+            "ℹ️ *Fahrplanänderung:*\n"
+            "Aus {motivo} ist die neue Abfahrtszeit um *{hora}* Uhr.\n\n"
+            "📍 *Treffpunkt:* {parada}\n"
+            "⏰ *Neue Zeit:* *{hora}* Uhr (bitte 10 min vorher da sein).\n\n"
+            "🎧 *Audioguide:* {audioguia}\n\n"
+            "Vielen Dank! 🚌✨\n"
+            "— *{empresa}*"
+        ),
+        "pt": (
+            "👋 Olá *{nombre}*,\n\n"
+            "Da *{empresa}* referente à sua reserva para *{tour}* hoje.\n\n"
+            "ℹ️ *Aviso de Horário:*\n"
+            "Por {motivo}, a hora de saída será às *{hora}*.\n\n"
+            "📍 *Ponto de encontro:* {parada}\n"
+            "⏰ *Nova hora:* *{hora}* (chegar 10 min antes).\n\n"
+            "🎧 *Audioguia:* {audioguia}\n\n"
+            "Muito obrigado! 🚌✨\n"
+            "— *{empresa}*"
+        ),
+        "it": (
+            "👋 Ciao *{nombre}*,\n\n"
+            "Da *{empresa}* in merito all'escursione *{tour}* di oggi.\n\n"
+            "ℹ️ *Avviso di orario:*\n"
+            "Per {motivo}, l'orario di partenza sarà alle *{hora}*.\n\n"
+            "📍 *Punto di incontro:* {parada}\n"
+            "⏰ *Nuovo orario:* *{hora}* (presentarsi 10 min prima).\n\n"
+            "🎧 *Audioguida:* {audioguia}\n\n"
+            "Grazie e a presto! 🚌✨\n"
+            "— *{empresa}*"
+        )
+    },
+    "review_request": {
+        "es": (
+            "👋 ¡Hola *{nombre}*!\n\n"
+            "Esperamos que hayas disfrutado al máximo de tu excursión *{tour}* con *{empresa}* ⭐.\n\n"
+            "Tu opinión es fundamental para nosotros y ayuda a futuros viajeros. ¿Nos regalarías 1 minuto para valorar tu experiencia en *{plataforma}*?\n\n"
+            "✍️ *Deja tu reseña aquí:* 👇\n"
+            "👉 {enlace_resena}\n\n"
+            "¡Muchísimas gracias por viajar con nosotros y esperamos verte pronto de nuevo en Galicia! 💙🚌✨\n"
+            "— *Equipo de {empresa}*"
+        ),
+        "en": (
+            "👋 Hello *{nombre}*!\n\n"
+            "We hope you had a wonderful experience on your *{tour}* tour with *{empresa}* ⭐.\n\n"
+            "Your feedback means a lot to our team and helps other travelers. Could you take 1 minute to rate your experience on *{plataforma}*?\n\n"
+            "✍️ *Leave your review here:* 👇\n"
+            "👉 {enlace_resena}\n\n"
+            "Thank you so much for joining us and we hope to welcome you back to Galicia! 💙🚌✨\n"
+            "— *{empresa} Team*"
+        ),
+        "fr": (
+            "👋 Bonjour *{nombre}* !\n\n"
+            "Nous espérons que vous avez passé un excellent moment lors de votre excursion *{tour}* avec *{empresa}* ⭐.\n\n"
+            "Votre avis compte énormément pour nous. Pourriez-vous nous accorder 1 minute pour partager votre expérience sur *{plataforma}* ?\n\n"
+            "✍️ *Laissez votre avis ici :* 👇\n"
+            "👉 {enlace_resena}\n\n"
+            "Merci beaucoup d'avoir voyagé avec nous et à bientôt en Galice ! 💙🚌✨\n"
+            "— *L'équipe {empresa}*"
+        ),
+        "de": (
+            "👋 Hallo *{nombre}*!\n\n"
+            "Wir hoffen, Sie hatten ein fantastisches Erlebnis bei Ihrem Ausflug *{tour}* mit *{empresa}* ⭐.\n\n"
+            "Ihre Meinung ist uns sehr wichtig. Dürfen wir Sie um 1 Minute für ein kurzes Feedback auf *{plataforma}* bitten?\n\n"
+            "✍️ *Bewertung hier abgeben:* 👇\n"
+            "👉 {enlace_resena}\n\n"
+            "Vielen Dank und bis zum nächsten Mal in Galizien! 💙🚌✨\n"
+            "— *{empresa}*"
+        ),
+        "pt": (
+            "👋 Olá *{nombre}*!\n\n"
+            "Esperamos que tenha desfrutado ao máximo do seu passeio *{tour}* com a *{empresa}* ⭐.\n\n"
+            "A sua avaliação é muito importante para nós. Poderia dispensar 1 minuto para partilhar a sua experiência no *{plataforma}*?\n\n"
+            "✍️ *Deixe a sua avaliação aqui:* 👇\n"
+            "👉 {enlace_resena}\n\n"
+            "Muito obrigado por viajar connosco e até breve na Galiza! 💙🚌✨\n"
+            "— *{empresa}*"
+        ),
+        "it": (
+            "👋 Ciao *{nombre}*!\n\n"
+            "Speriamo che la tua escursione *{tour}* con *{empresa}* sia stata un'esperienza fantastica ⭐.\n\n"
+            "La tua opinione è preziosa per noi e per altri viaggiatori. Ci dedicheresti 1 minuto per lasciare una recensione su *{plataforma}*?\n\n"
+            "✍️ *Lascia la tua recensione qui:* 👇\n"
+            "👉 {enlace_resena}\n\n"
+            "Grazie di cuore per aver viaggiato con noi e a presto in Galizia! 💙🚌✨\n"
+            "— *{empresa}*"
+        )
+    }
+}
+
+class TemplateManager:
+    def __init__(self):
+        self.templates = self._load()
+
+    def _load(self) -> Dict[str, Any]:
+        if TEMPLATES_FILE.exists():
+            try:
+                with open(TEMPLATES_FILE, "r", encoding="utf-8") as f:
+                    loaded = json.load(f)
+                    # Merge with default keys if missing
+                    for k, v in DEFAULT_TEMPLATES.items():
+                        if k not in loaded:
+                            loaded[k] = v
+                    return loaded
+            except Exception:
+                pass
+        return DEFAULT_TEMPLATES.copy()
+
+    def save(self, new_templates: Dict[str, Any]) -> bool:
+        self.templates = new_templates
+        try:
+            with open(TEMPLATES_FILE, "w", encoding="utf-8") as f:
+                json.dump(new_templates, f, ensure_ascii=False, indent=2)
+            return True
+        except Exception as e:
+            print("Error saving templates:", e)
+            return False
+
+    def get_templates(self) -> Dict[str, Any]:
+        return self.templates
+
+    def render(
+        self,
+        client_name: str,
+        tour_name: str,
+        new_time: str = "",
+        pickup_stop: str = "",
+        reason: str = "",
+        lang_code: str = "es",
+        company_name: str = "Tour Galicia",
+        template_type: str = "departure_pickup",
+        review_link: str = "",
+        platform_name: str = "Google"
+    ) -> str:
+        group = self.templates.get(template_type) or self.templates.get("departure_pickup") or self.templates.get("schedule_change", {})
+        template = group.get(lang_code, group.get("en", group.get("es", "")))
+
+        # Get audio guide link for language
+        audioguide = AUDIOGUIDE_LINKS.get(lang_code, AUDIOGUIDE_LINKS["en"])
+        rev_link = review_link or REVIEW_LINKS.get("default")
+
+        rendered = template
+        replacements = {
+            "{nombre}": client_name or "Estimado/a cliente",
+            "{client_name}": client_name or "Estimado/a cliente",
+            "{hora}": new_time,
+            "{new_time}": new_time,
+            "{parada}": pickup_stop or "Punto de salida habitual",
+            "{pickup_stop}": pickup_stop or "Punto de salida habitual",
+            "{tour}": tour_name,
+            "{tour_name}": tour_name,
+            "{motivo}": reason or "motivos de organización",
+            "{reason}": reason or "motivos de organización",
+            "{empresa}": company_name,
+            "{company_name}": company_name,
+            "{audioguia}": audioguide,
+            "{audioguide}": audioguide,
+            "{enlace_resena}": rev_link,
+            "{review_link}": rev_link,
+            "{plataforma}": platform_name or "Google",
+            "{platform}": platform_name or "Google"
+        }
+
+        for var, val in replacements.items():
+            rendered = rendered.replace(var, str(val))
+
+        return rendered
+
+template_mgr = TemplateManager()
