@@ -200,6 +200,7 @@ class AssistantParser:
                 msg = template_mgr.render(
                     client_name=b["client_name"],
                     tour_name=t_name,
+                    tour_id=b.get("tour_id"),
                     lang_code=lc,
                     company_name=COMPANY_NAME,
                     template_type="review_request",
@@ -428,6 +429,7 @@ class AssistantParser:
             msg = template_mgr.render(
                 client_name=booking["client_name"],
                 tour_name=matched_tour["name"],
+                tour_id=matched_tour.get("id"),
                 new_time=msg_time,
                 pickup_stop=stop,
                 reason=reason,

@@ -32,6 +32,15 @@ class SaveTemplatesRequest(BaseModel):
 class GeminiConfigRequest(BaseModel):
     api_key: str
 
+class CustomTemplateModel(BaseModel):
+    id: Optional[str] = None
+    title: str
+    tour_id: Optional[str] = "all"
+    tour_name: Optional[str] = "Todos los Tours"
+    language: Optional[str] = "es"
+    category: Optional[str] = "departure_pickup"
+    content: str
+
 class PrepareBroadcastRequest(BaseModel):
     tour_id: str
     pickup_stop: Optional[str] = "all"
@@ -323,14 +332,28 @@ def get_whatsapp_qr():
 
 @app.get("/api/templates")
 def get_templates():
-    return template_mgr.get_templates()
+    return template_mgr.get_all()
 
 @app.post("/api/templates/save")
 def save_templates(req: SaveTemplatesRequest):
-    success = template_mgr.save(req.templates)
+    success = template_mgr.save_base_templates(req.templates)
     if not success:
         raise HTTPException(status_code=500, detail="Error al guardar las plantillas en disco.")
     return {"success": True, "message": "Plantillas guardadas correctamente."}
+
+@app.get("/api/templates/custom")
+def get_custom_templates():
+    return template_mgr.get_custom_templates()
+
+@app.post("/api/templates/custom")
+def add_custom_template(req: CustomTemplateModel):
+    saved = template_mgr.add_custom_template(req.dict())
+    return {"success": True, "template": saved}
+
+@app.delete("/api/templates/custom/{tpl_id}")
+def delete_custom_template(tpl_id: str):
+    success = template_mgr.delete_custom_template(tpl_id)
+    return {"success": success}
 
 @app.post("/api/gemini/config")
 def config_gemini(req: GeminiConfigRequest):

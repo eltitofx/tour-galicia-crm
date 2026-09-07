@@ -1,7 +1,8 @@
 import os
 import json
+import uuid
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, List, Optional
 
 TEMPLATES_FILE = Path(__file__).resolve().parent.parent / "custom_templates.json"
 
@@ -24,7 +25,7 @@ REVIEW_LINKS = {
     "default": "https://g.page/r/TourGalicia/review"
 }
 
-DEFAULT_TEMPLATES = {
+DEFAULT_SYSTEM_TEMPLATES = {
     "departure_pickup": {
         "es": (
             "👋 Hola *{nombre}*,\n\n"
@@ -209,41 +210,124 @@ DEFAULT_TEMPLATES = {
     }
 }
 
+
 class TemplateManager:
     def __init__(self):
-        self.templates = self._load()
+        self.data = self._load()
 
     def _load(self) -> Dict[str, Any]:
+        result = {
+            "departure_pickup": DEFAULT_SYSTEM_TEMPLATES["departure_pickup"].copy(),
+            "schedule_change": DEFAULT_SYSTEM_TEMPLATES["schedule_change"].copy(),
+            "review_request": DEFAULT_SYSTEM_TEMPLATES["review_request"].copy(),
+            "custom_templates": []
+        }
+
         if TEMPLATES_FILE.exists():
             try:
                 with open(TEMPLATES_FILE, "r", encoding="utf-8") as f:
                     loaded = json.load(f)
-                    # Merge with default keys if missing
-                    for k, v in DEFAULT_TEMPLATES.items():
-                        if k not in loaded:
-                            loaded[k] = v
-                    return loaded
-            except Exception:
-                pass
-        return DEFAULT_TEMPLATES.copy()
+                    if isinstance(loaded, dict):
+                        # Merge departure_pickup / schedule_change / review_request
+                        for key in ["departure_pickup", "schedule_change", "review_request"]:
+                            if key in loaded and isinstance(loaded[key], dict):
+                                result[key].update(loaded[key])
+                        if "custom_templates" in loaded and isinstance(loaded["custom_templates"], list):
+                            result["custom_templates"] = loaded["custom_templates"]
+            except Exception as e:
+                print("Error loading custom_templates.json:", e)
 
-    def save(self, new_templates: Dict[str, Any]) -> bool:
-        self.templates = new_templates
+        return result
+
+    def _save_to_disk(self) -> bool:
         try:
             with open(TEMPLATES_FILE, "w", encoding="utf-8") as f:
-                json.dump(new_templates, f, ensure_ascii=False, indent=2)
+                json.dump(self.data, f, ensure_ascii=False, indent=2)
             return True
         except Exception as e:
-            print("Error saving templates:", e)
+            print("Error saving templates to disk:", e)
             return False
 
-    def get_templates(self) -> Dict[str, Any]:
-        return self.templates
+    def get_all(self) -> Dict[str, Any]:
+        return self.data
+
+    def save_base_templates(self, templates_dict: Dict[str, Any]) -> bool:
+        for key in ["departure_pickup", "schedule_change", "review_request"]:
+            if key in templates_dict:
+                self.data[key] = templates_dict[key]
+        return self._save_to_disk()
+
+    # Custom dynamic templates CRUD
+    def get_custom_templates(self) -> List[Dict[str, Any]]:
+        return self.data.get("custom_templates", [])
+
+    def add_custom_template(self, tpl: Dict[str, Any]) -> Dict[str, Any]:
+        tpl_id = tpl.get("id") or f"tpl_{uuid.uuid4().hex[:8]}"
+        new_entry = {
+            "id": tpl_id,
+            "title": tpl.get("title", "Plantilla Personalizada").strip(),
+            "tour_id": tpl.get("tour_id", "all"),
+            "tour_name": tpl.get("tour_name", "Todos los Tours"),
+            "language": tpl.get("language", "es").lower(),
+            "category": tpl.get("category", "departure_pickup"),
+            "content": tpl.get("content", "").strip()
+        }
+
+        # Check if updating existing
+        existing_idx = next((i for i, t in enumerate(self.data["custom_templates"]) if t.get("id") == tpl_id), None)
+        if existing_idx is not None:
+            self.data["custom_templates"][existing_idx] = new_entry
+        else:
+            self.data["custom_templates"].append(new_entry)
+
+        self._save_to_disk()
+        return new_entry
+
+    def delete_custom_template(self, tpl_id: str) -> bool:
+        initial_len = len(self.data.get("custom_templates", []))
+        self.data["custom_templates"] = [t for t in self.data.get("custom_templates", []) if t.get("id") != tpl_id]
+        if len(self.data["custom_templates"]) != initial_len:
+            return self._save_to_disk()
+        return False
+
+    def find_best_template(
+        self,
+        tour_id: Optional[str] = None,
+        tour_name: Optional[str] = None,
+        lang_code: str = "es",
+        category: str = "departure_pickup"
+    ) -> Optional[str]:
+        lang_code = lang_code.lower()
+        customs = self.data.get("custom_templates", [])
+
+        # 1. Exact tour_id + language + category
+        if tour_id and tour_id != "all":
+            for t in customs:
+                if t.get("tour_id") == tour_id and t.get("language") == lang_code and t.get("category") == category:
+                    return t.get("content")
+
+        # 2. Fuzzy tour_name + language + category
+        if tour_name and customs:
+            t_name_lower = tour_name.lower()
+            for t in customs:
+                tpl_tour = (t.get("tour_name") or "").lower()
+                if tpl_tour != "todos los tours" and tpl_tour in t_name_lower and t.get("language") == lang_code and t.get("category") == category:
+                    return t.get("content")
+
+        # 3. Global custom for language + category (tour_id == 'all')
+        for t in customs:
+            if t.get("tour_id") == "all" and t.get("language") == lang_code and t.get("category") == category:
+                return t.get("content")
+
+        # 4. Fallback to default base templates
+        group = self.data.get(category) or self.data.get("departure_pickup", {})
+        return group.get(lang_code, group.get("en", group.get("es", "")))
 
     def render(
         self,
         client_name: str,
         tour_name: str,
+        tour_id: Optional[str] = None,
         new_time: str = "",
         pickup_stop: str = "",
         reason: str = "",
@@ -253,19 +337,30 @@ class TemplateManager:
         review_link: str = "",
         platform_name: str = "Google"
     ) -> str:
-        group = self.templates.get(template_type) or self.templates.get("departure_pickup") or self.templates.get("schedule_change", {})
-        template = group.get(lang_code, group.get("en", group.get("es", "")))
+        template = self.find_best_template(
+            tour_id=tour_id,
+            tour_name=tour_name,
+            lang_code=lang_code,
+            category=template_type
+        )
 
-        # Get audio guide link for language
-        audioguide = AUDIOGUIDE_LINKS.get(lang_code, AUDIOGUIDE_LINKS["en"])
+        if not template:
+            template = (
+                "👋 Hola *{nombre}*,\n\n"
+                "Confirmamos tu excursión *{tour}* hoy con salida a las *{hora}* en *{parada}*.\n"
+                "🎧 Audioguía: {audioguia}\n\n"
+                "— *{empresa}*"
+            )
+
+        audioguide = AUDIOGUIDE_LINKS.get(lang_code, AUDIOGUIDE_LINKS.get("en", "https://audioguide.tourgalicia.es/es"))
         rev_link = review_link or REVIEW_LINKS.get("default")
 
         rendered = template
         replacements = {
             "{nombre}": client_name or "Estimado/a cliente",
             "{client_name}": client_name or "Estimado/a cliente",
-            "{hora}": new_time,
-            "{new_time}": new_time,
+            "{hora}": new_time or "09:00",
+            "{new_time}": new_time or "09:00",
             "{parada}": pickup_stop or "Punto de salida habitual",
             "{pickup_stop}": pickup_stop or "Punto de salida habitual",
             "{tour}": tour_name,
@@ -286,5 +381,6 @@ class TemplateManager:
             rendered = rendered.replace(var, str(val))
 
         return rendered
+
 
 template_mgr = TemplateManager()
