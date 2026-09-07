@@ -105,18 +105,24 @@
         </div>
 
         <!-- STATUS BADGES -->
-        <div class="flex items-center space-x-3 text-xs">
+        <div class="flex items-center space-x-2 sm:space-x-3 text-xs">
           <!-- TURITOP STATUS BADGE -->
           <div class="flex items-center space-x-2 bg-emerald-950/70 text-emerald-300 px-3 py-1.5 rounded-lg border border-emerald-700/60 font-semibold">
             <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
             <span>TuriTop:</span>
-            <span class="font-mono text-emerald-200" id="status-turitop">T955 En Vivo (44 Tours)</span>
+            <span class="font-mono text-emerald-200" id="status-turitop">T955 En Vivo</span>
           </div>
 
+          <!-- WHATSAPP QR STATUS BUTTON -->
+          <button onclick="openWhatsAppQrModal()" id="btn-wa-header" class="flex items-center space-x-2 bg-emerald-900/60 hover:bg-emerald-800 text-emerald-200 px-3 py-1.5 rounded-lg border border-emerald-500/50 font-semibold transition cursor-pointer">
+            <i data-lucide="smartphone" class="w-4 h-4 text-emerald-400"></i>
+            <span id="wa-header-text">📲 Vincular WhatsApp</span>
+          </button>
+
           <!-- GEMINI AI BADGE -->
-          <div class="flex items-center space-x-2 bg-purple-950/70 text-purple-300 px-3 py-1.5 rounded-lg border border-purple-700/60 font-semibold">
+          <div class="hidden md:flex items-center space-x-2 bg-purple-950/70 text-purple-300 px-3 py-1.5 rounded-lg border border-purple-700/60 font-semibold">
             <i data-lucide="sparkles" class="w-4 h-4 text-purple-400"></i>
-            <span>Gemini 3.5 Flash</span>
+            <span>Gemini 3.5</span>
           </div>
 
           <!-- USER / LOGOUT BADGE -->
@@ -788,6 +794,49 @@
     </div>
   </div>
 
+  <!-- WHATSAPP QR MODAL -->
+  <div id="whatsapp-qr-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 text-center shadow-2xl space-y-5 relative">
+      <button onclick="closeWhatsAppQrModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <div class="space-y-1">
+        <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mx-auto">
+          <i data-lucide="qr-code" class="w-6 h-6"></i>
+        </div>
+        <h3 class="text-lg font-bold text-white">Vincular WhatsApp de Tour Galicia</h3>
+        <p class="text-xs text-slate-400">Escanea este código con la app de WhatsApp de tu móvil</p>
+      </div>
+
+      <!-- QR IMAGE CONTAINER -->
+      <div id="qr-container" class="bg-white p-4 rounded-2xl mx-auto w-64 h-64 flex items-center justify-center shadow-inner relative">
+        <div id="qr-loading" class="text-slate-500 text-xs font-semibold flex flex-col items-center gap-2">
+          <span class="animate-spin text-2xl">⏳</span>
+          <span id="qr-loading-text">Cargando código QR de WhatsApp...</span>
+        </div>
+        <img id="qr-image" src="" alt="WhatsApp QR" class="hidden w-full h-full object-contain rounded-lg">
+      </div>
+
+      <div id="qr-instructions" class="bg-slate-800/60 rounded-xl p-3 text-left space-y-1 text-xs text-slate-300">
+        <p class="font-bold text-slate-200">Instrucciones en tu móvil:</p>
+        <p>1. Abre WhatsApp en tu teléfono.</p>
+        <p>2. Ve a <b>Ajustes</b> (o ⋮ menú) ➡️ <b>Dispositivos vinculados</b>.</p>
+        <p>3. Pulsa <b>Vincular un dispositivo</b> y apunta la cámara al código.</p>
+      </div>
+
+      <div id="qr-success-alert" class="hidden bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-semibold p-3.5 rounded-xl flex items-center justify-center gap-2">
+        <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
+        <span>¡WhatsApp conectado con éxito a Tour Galicia!</span>
+      </div>
+
+      <button onclick="loadWhatsAppQr()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 transition">
+        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+        <span>Actualizar Código QR</span>
+      </button>
+    </div>
+  </div>
+
   </div> <!-- END APP-VIEW -->
 
   <!-- SCRIPT LOGIC -->
@@ -797,11 +846,68 @@
     let allBookings = [];
     let preparedBatch = null;
     let preparedReviewBatch = null;
+    let qrPollInterval = null;
 
     document.addEventListener("DOMContentLoaded", () => {
       lucide.createIcons();
       checkAuth();
     });
+
+    async function openWhatsAppQrModal() {
+      document.getElementById("whatsapp-qr-modal").classList.remove("hidden");
+      lucide.createIcons();
+      await loadWhatsAppQr();
+      startQrPolling();
+    }
+
+    function closeWhatsAppQrModal() {
+      document.getElementById("whatsapp-qr-modal").classList.add("hidden");
+      if (qrPollInterval) clearInterval(qrPollInterval);
+    }
+
+    async function loadWhatsAppQr() {
+      const qrImg = document.getElementById("qr-image");
+      const qrLoading = document.getElementById("qr-loading");
+      const loadText = document.getElementById("qr-loading-text");
+      const successAlert = document.getElementById("qr-success-alert");
+      const instr = document.getElementById("qr-instructions");
+
+      qrImg.classList.add("hidden");
+      qrLoading.classList.remove("hidden");
+      loadText.innerText = "Obteniendo código QR de WhatsApp...";
+
+      try {
+        const res = await authFetch("/api/whatsapp/qr");
+        const data = await res.json();
+        
+        if (data.base64) {
+          qrImg.src = data.base64.startsWith("data:") ? data.base64 : `data:image/png;base64,${data.base64}`;
+          qrImg.classList.remove("hidden");
+          qrLoading.classList.add("hidden");
+        } else {
+          loadText.innerText = data.message || "Esperando conexión con WhatsApp...";
+        }
+      } catch (err) {
+        loadText.innerText = "Error cargando código QR.";
+      }
+    }
+
+    function startQrPolling() {
+      if (qrPollInterval) clearInterval(qrPollInterval);
+      qrPollInterval = setInterval(async () => {
+        try {
+          const res = await authFetch("/api/whatsapp/status");
+          const data = await res.json();
+          if (data.connected && data.state === "open") {
+            document.getElementById("qr-success-alert").classList.remove("hidden");
+            document.getElementById("qr-container").classList.add("hidden");
+            document.getElementById("qr-instructions").classList.add("hidden");
+            document.getElementById("wa-header-text").innerText = "🟢 WhatsApp Conectado";
+            clearInterval(qrPollInterval);
+          }
+        } catch (e) {}
+      }, 3000);
+    }
 
     async function authFetch(url, options = {}) {
       options.headers = options.headers || {};

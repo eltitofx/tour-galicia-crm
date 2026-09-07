@@ -12,10 +12,10 @@ TURITOP_API_BASE_URL = os.getenv("TURITOP_API_BASE_URL", "https://app.turitop.co
 COMPANY_NAME = os.getenv("COMPANY_NAME", "Tour Galicia")
 COMPANY_PHONE = os.getenv("COMPANY_PHONE", "+34 981 00 00 00")
 
-# WhatsApp Provider: 'simulator', 'evolution_api', 'wassenger', 'meta'
-WHATSAPP_PROVIDER = os.getenv("WHATSAPP_PROVIDER", "simulator")
-WHATSAPP_API_URL = os.getenv("WHATSAPP_API_URL", "http://localhost:8080")
-WHATSAPP_API_KEY = os.getenv("WHATSAPP_API_KEY", "")
+# WhatsApp Provider: 'evolution_api', 'wassenger', 'simulator'
+WHATSAPP_PROVIDER = os.getenv("WHATSAPP_PROVIDER", "evolution_api")
+WHATSAPP_API_URL = os.getenv("WHATSAPP_API_URL", "https://evolution-api-production-102c7.up.railway.app")
+WHATSAPP_API_KEY = os.getenv("WHATSAPP_API_KEY", "cc92bba81eb2edbaeaeb8a248878fd2831cfa0dd59bf9386ff9e6a781b35328b")
 WHATSAPP_INSTANCE = os.getenv("WHATSAPP_INSTANCE", "tour-galicia")
 
 # Admin Auth Credentials
