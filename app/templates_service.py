@@ -207,6 +207,74 @@ DEFAULT_SYSTEM_TEMPLATES = {
             "Grazie di cuore per aver viaggiato con noi e a presto in Galizia! 💙🚌✨\n"
             "— *{empresa}*"
         )
+    },
+    "cancellation_notice": {
+        "es": (
+            "👋 Hola *{nombre}*,\n\n"
+            "Te contactamos desde *{empresa}* respecto a tu reserva para la excursión *{tour}* de {fecha_salida}.\n\n"
+            "ℹ️ *Aviso Importante:*\n"
+            "Lamentamos comunicarte que, debido a *{motivo}*, no será posible operar esta salida.\n\n"
+            "Por favor, responde directamente a este WhatsApp para gestionar tu alternativa preferida:\n"
+            "1️⃣ *Reubicación* en otra de nuestras salidas disponibles.\n"
+            "2️⃣ *Reembolso íntegro* inmediato del importe de tu reserva.\n\n"
+            "Sentimos mucho las molestias y quedamos a tu entera disposición.\n\n"
+            "— *Equipo de {empresa}*"
+        ),
+        "en": (
+            "👋 Hello *{nombre}*,\n\n"
+            "We are contacting you from *{empresa}* regarding your booking for the *{tour}* excursion on {fecha_salida}.\n\n"
+            "ℹ️ *Important Notice:*\n"
+            "We regret to inform you that, due to *{motivo}*, this tour departure cannot operate.\n\n"
+            "Please reply directly to this WhatsApp message to choose your preferred option:\n"
+            "1️⃣ *Reschedule* to another available tour date or route.\n"
+            "2️⃣ *Full and immediate refund* of your booking.\n\n"
+            "We sincerely apologize for any inconvenience caused.\n\n"
+            "— *{empresa} Team*"
+        ),
+        "fr": (
+            "👋 Bonjour *{nombre}*,\n\n"
+            "Nous vous contactons de la part de *{empresa}* au sujet de votre réservation pour l'excursion *{tour}* du {fecha_salida}.\n\n"
+            "ℹ️ *Avis Important :*\n"
+            "Nous avons le regret de vous informer que, pour *{motivo}*, cette sortie ne pourra pas avoir lieu.\n\n"
+            "Merci de répondre directement à ce message pour nous indiquer votre choix :\n"
+            "1️⃣ *Report* sur une autre de nos excursions disponibles.\n"
+            "2️⃣ *Remboursement intégral* et immédiat de votre réservation.\n\n"
+            "Veuillez nous excuser pour ce désagrément.\n\n"
+            "— *L'équipe {empresa}*"
+        ),
+        "de": (
+            "👋 Hallo *{nombre}*,\n\n"
+            "wir kontaktieren Sie von *{empresa}* bezüglich Ihrer Buchung für *{tour}* am {fecha_salida}.\n\n"
+            "ℹ️ *Wichtige Mitteilung:*\n"
+            "Leider müssen wir Ihnen mitteilen, dass diese Tour aufgrund von *{motivo}* nicht stattfinden kann.\n\n"
+            "Bitte antworten Sie direkt auf diese Nachricht, um Ihre Option zu wählen:\n"
+            "1️⃣ *Umbuchung* auf einen anderen verfügbaren Ausflug.\n"
+            "2️⃣ *Vollständige Rückerstattung* Ihres Buchungsbetrags.\n\n"
+            "Wir bitten die Unannehmlichkeiten vielmals zu entschuldigen.\n\n"
+            "— *{empresa}*"
+        ),
+        "pt": (
+            "👋 Olá *{nombre}*,\n\n"
+            "Contactamos da *{empresa}* referente à sua reserva para a excursão *{tour}* de {fecha_salida}.\n\n"
+            "ℹ️ *Aviso Importante:*\n"
+            "Lamentamos informar que, devido a *{motivo}*, esta saída não poderá realizar-se.\n\n"
+            "Por favor, responda diretamente a esta mensagem para indicar a sua preferência:\n"
+            "1️⃣ *Reagendamento* para outra das nossas excursões disponíveis.\n"
+            "2️⃣ *Reembolso integral* do valor da sua reserva.\n\n"
+            "Pedimos sinceras desculpas pelo transtorno.\n\n"
+            "— *{empresa}*"
+        ),
+        "it": (
+            "👋 Ciao *{nombre}*,\n\n"
+            "Ti contattiamo da *{empresa}* riguardo alla tua prenotazione per l'escursione *{tour}* del {fecha_salida}.\n\n"
+            "ℹ️ *Avviso Importante:*\n"
+            "Siamo spiacenti di comunicarti che, a causa di *{motivo}*, questa partenza non potrà essere effettuata.\n\n"
+            "Ti preghiamo di rispondere direttamente a questo messaggio per gestire l'opzione che preferisci:\n"
+            "1️⃣ *Riprogrammazione* su un'altra delle nostre escursioni.\n"
+            "2️⃣ *Rimborso integrale* immediato della prenotazione.\n\n"
+            "Ci scusiamo per il disagio.\n\n"
+            "— *{empresa}*"
+        )
     }
 }
 
@@ -219,6 +287,7 @@ class TemplateManager:
         result = {
             "departure_pickup": DEFAULT_SYSTEM_TEMPLATES["departure_pickup"].copy(),
             "schedule_change": DEFAULT_SYSTEM_TEMPLATES["schedule_change"].copy(),
+            "cancellation_notice": DEFAULT_SYSTEM_TEMPLATES["cancellation_notice"].copy(),
             "review_request": DEFAULT_SYSTEM_TEMPLATES["review_request"].copy(),
             "custom_templates": []
         }
@@ -228,8 +297,8 @@ class TemplateManager:
                 with open(TEMPLATES_FILE, "r", encoding="utf-8") as f:
                     loaded = json.load(f)
                     if isinstance(loaded, dict):
-                        # Merge departure_pickup / schedule_change / review_request
-                        for key in ["departure_pickup", "schedule_change", "review_request"]:
+                        # Merge departure_pickup / schedule_change / cancellation_notice / review_request
+                        for key in ["departure_pickup", "schedule_change", "cancellation_notice", "review_request"]:
                             if key in loaded and isinstance(loaded[key], dict):
                                 result[key].update(loaded[key])
                         if "custom_templates" in loaded and isinstance(loaded["custom_templates"], list):
@@ -335,7 +404,8 @@ class TemplateManager:
         company_name: str = "Tour Galicia",
         template_type: str = "departure_pickup",
         review_link: str = "",
-        platform_name: str = "Google"
+        platform_name: str = "Google",
+        date_label: str = "mañana"
     ) -> str:
         template = self.find_best_template(
             tour_id=tour_id,
@@ -347,7 +417,7 @@ class TemplateManager:
         if not template:
             template = (
                 "👋 Hola *{nombre}*,\n\n"
-                "Confirmamos tu excursión *{tour}* hoy con salida a las *{hora}* en *{parada}*.\n"
+                "Confirmamos tu excursión *{tour}* con salida a las *{hora}* en *{parada}*.\n"
                 "🎧 Audioguía: {audioguia}\n\n"
                 "— *{empresa}*"
             )
@@ -374,7 +444,9 @@ class TemplateManager:
             "{enlace_resena}": rev_link,
             "{review_link}": rev_link,
             "{plataforma}": platform_name or "Google",
-            "{platform}": platform_name or "Google"
+            "{platform}": platform_name or "Google",
+            "{fecha_salida}": date_label or "mañana",
+            "{date_label}": date_label or "mañana"
         }
 
         for var, val in replacements.items():

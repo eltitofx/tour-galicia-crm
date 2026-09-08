@@ -1847,11 +1847,25 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ prompt: prompt, target_date: dateVal })
         });
-        const data = await res.json();
+        
+        let data;
+        if (res.ok) {
+          data = await res.json();
+        } else {
+          let errText = "Error del servidor";
+          try {
+            const errJson = await res.json();
+            errText = errJson.detail || errJson.message || JSON.stringify(errJson);
+          } catch(e) {
+            errText = await res.text();
+          }
+          alert("Aviso al procesar la instrucción: " + errText);
+          return;
+        }
 
         const respBox = document.getElementById("ai-response-box");
         const respText = document.getElementById("ai-response-text");
-        respText.innerText = data.assistant_reply;
+        respText.innerText = data.assistant_reply || "Instrucción procesada correctamente.";
         respBox.classList.remove("hidden");
 
         if (data.clients && data.clients.length > 0) {

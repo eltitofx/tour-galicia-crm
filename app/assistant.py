@@ -3,7 +3,7 @@ from datetime import date, timedelta
 from typing import Dict, Any, Optional, List
 
 from app.turitop_service import turitop
-from app.templates_service import template_mgr
+from app.templates_service import template_mgr, REVIEW_LINKS
 from app.gemini_service import gemini
 from app.config import COMPANY_NAME
 
@@ -34,6 +34,11 @@ def _fuzzy_match_tour(text_lower: str, available_tours: List[Dict[str, Any]]) ->
         f_atar = next((t for t in available_tours if "atardecer" in t["name"].lower()), None)
         if f_atar:
             return f_atar
+
+    if "meigas" in text_lower or "misterios" in text_lower or "teatralizado" in text_lower:
+        meig = next((t for t in available_tours if "meigas" in t["name"].lower()), None)
+        if meig:
+            return meig
 
     if "catedrales" in text_lower or "playa" in text_lower or "ribadeo" in text_lower:
         cat = next((t for t in available_tours if "catedrales" in t["name"].lower() and "santiago" in t["name"].lower()), None)
@@ -89,10 +94,10 @@ class AssistantParser:
         used_engine = "Reglas Locales"
 
         # 1. Resolve date from natural language
-        if "pasado mañana" in text_lower:
+        if "pasado mañana" in text_lower or "pasado manana" in text_lower:
             resolved_date = (date.today() + timedelta(days=2)).strftime("%Y-%m-%d")
             date_label = f"Pasado mañana ({(date.today() + timedelta(days=2)).strftime('%d/%m/%Y')})"
-        elif "mañana" in text_lower:
+        elif "mañana" in text_lower or "manana" in text_lower:
             resolved_date = (date.today() + timedelta(days=1)).strftime("%Y-%m-%d")
             date_label = f"Mañana ({(date.today() + timedelta(days=1)).strftime('%d/%m/%Y')})"
         elif "hoy" in text_lower:
@@ -108,7 +113,7 @@ class AssistantParser:
             resolved_date = date.today().strftime("%Y-%m-%d")
             date_label = f"Hoy ({date.today().strftime('%d/%m/%Y')})"
 
-        # 2. Ask Gemini AI first
+        # 2. Ask Gemini AI first if configured
         if gemini.is_configured():
             g = gemini.parse_with_gemini(text, available_tours)
             if g:
@@ -152,22 +157,24 @@ class AssistantParser:
                 target_provider = None
 
         # 3. Fallback intent detection
-        if not intent:
-            review_kw = ["reseña", "reseñas", "opinion", "opiniones", "valoracion", "valoraciones", "review", "reviews", "google", "recordatorio de opinion"]
-            sched_kw = ["avisa", "cambia", "unifica", "informa", "notifica", "retraso", "adelanta", "salida a las", "punto de encuentro", "enviar", "recuerda", "recordar"]
-            info_kw = ["cuantos", "cuántos", "quien viene", "quién viene", "listado de", "localiza", "busca", "consultar"]
-            overview_kw = ["que tours", "todos los tours", "tours de hoy", "resumen general"]
+        cancellation_kw = ["minimo", "mínimo", "no sale", "cancelar", "cancelación", "cancelacion", "cancelado", "cancelada", "suspender", "anular", "no se realiza", "no va a salir", "no hemos alcanzado"]
+        review_kw = ["reseña", "reseñas", "opinion", "opiniones", "valoracion", "valoraciones", "review", "reviews", "google", "recordatorio de opinion"]
+        sched_kw = ["avisa", "cambia", "unifica", "informa", "notifica", "retraso", "adelanta", "salida a las", "punto de encuentro", "enviar", "recuerda", "recordar"]
+        info_kw = ["cuantos", "cuántos", "quien viene", "quién viene", "listado de", "localiza", "busca", "consultar"]
+        overview_kw = ["que tours", "todos los tours", "tours de hoy", "resumen general"]
 
-            if any(kw in text_lower for kw in review_kw):
-                intent = "review_campaign"
-            elif any(kw in text_lower for kw in overview_kw) and not any(kw in text_lower for kw in sched_kw):
-                intent = "overview_all"
-            elif any(kw in text_lower for kw in sched_kw):
-                intent = "schedule_change"
-            elif any(kw in text_lower for kw in info_kw):
-                intent = "info_query"
-            else:
-                intent = "schedule_change"
+        if any(kw in text_lower for kw in cancellation_kw):
+            intent = "cancellation_notice"
+        elif any(kw in text_lower for kw in review_kw):
+            intent = "review_campaign"
+        elif any(kw in text_lower for kw in overview_kw) and not any(kw in text_lower for kw in sched_kw):
+            intent = "overview_all"
+        elif any(kw in text_lower for kw in sched_kw):
+            intent = "schedule_change"
+        elif any(kw in text_lower for kw in info_kw):
+            intent = "info_query"
+        elif not intent:
+            intent = "schedule_change"
 
         # 4. Match tour if not matched yet
         if not matched_tour and intent != "overview_all":
@@ -181,7 +188,9 @@ class AssistantParser:
                 new_time = f"{int(h):02d}:{mn}"
 
         # 6. Extract reason if mentioned
-        if "trafico" in text_lower or "tráfico" in text_lower:
+        if any(kw in text_lower for kw in ["minimo", "mínimo", "no hemos alcanzado", "participantes"]):
+            reason = "no haberse alcanzado el número mínimo de participantes requerido"
+        elif "trafico" in text_lower or "tráfico" in text_lower:
             reason = "motivos de tráfico"
         elif "lluvia" in text_lower or "meteorol" in text_lower or "clima" in text_lower or "tiempo" in text_lower:
             reason = "condiciones meteorológicas"
@@ -190,9 +199,6 @@ class AssistantParser:
 
         # Intent: REVIEW CAMPAIGN
         if intent == "review_campaign":
-            from datetime import date, timedelta
-            from app.templates_service import REVIEW_LINKS
-
             if "ayer" in text_lower:
                 d_from = (date.today() - timedelta(days=1)).strftime("%Y-%m-%d")
                 d_to = d_from
@@ -252,7 +258,8 @@ class AssistantParser:
                     company_name=COMPANY_NAME,
                     template_type="review_request",
                     review_link=dest_url,
-                    platform_name=dest_platform
+                    platform_name=dest_platform,
+                    date_label=date_label
                 )
 
                 lang_breakdown.setdefault(ln, {"count": 0, "flag": flag})
@@ -322,7 +329,7 @@ class AssistantParser:
                     "reason": reason, "target_slots": [], "total_clients": 0,
                     "languages_summary": {}, "clients": []}
 
-        # Intent: SCHEDULE CHANGE / DEPARTURE PICKUP NOTIFICATION (MAIN WORKFLOW)
+        # Intent: CANCELLATION / MINIMUM PARTICIPANTS / SCHEDULE CHANGE / DEPARTURE PICKUP NOTIFICATION
         all_bookings = turitop.get_bookings(
             tour_id=matched_tour["id"],
             target_date=resolved_date,
@@ -338,6 +345,14 @@ class AssistantParser:
         stops_breakdown = {}
         prepared = []
         total_pax = 0
+
+        # Determine template category
+        if intent == "cancellation_notice":
+            tpl_category = "cancellation_notice"
+        elif new_time:
+            tpl_category = "schedule_change"
+        else:
+            tpl_category = "departure_pickup"
 
         for booking in affected:
             lc = booking["language"]["code"]
@@ -356,7 +371,7 @@ class AssistantParser:
 
             msg_time = new_time if new_time else (booking.get("slot") or "09:00")
             
-            # Smart template rendering based on tour, language and stop
+            # Smart template rendering based on tour, language, reason and date
             msg = template_mgr.render(
                 client_name=booking["client_name"],
                 tour_name=matched_tour["name"],
@@ -366,7 +381,8 @@ class AssistantParser:
                 reason=reason,
                 lang_code=lc,
                 company_name=COMPANY_NAME,
-                template_type="departure_pickup" if not new_time or new_time == booking.get("slot") else "schedule_change"
+                template_type=tpl_category,
+                date_label=date_label
             )
 
             prepared.append({
@@ -387,16 +403,25 @@ class AssistantParser:
                 "message": msg
             })
 
-        reply_lines = [
-            f"🚌 **{matched_tour['name']}** — {date_label}",
-            f"📊 **Total:** {len(prepared)} reservas ({total_pax} pasajeros)\n",
-            f"📍 **Puntos de Recogida Asignados:**"
-        ]
-        for stop, st in stops_breakdown.items():
-            icon = st.get("icon", "📍")
-            reply_lines.append(f"  {icon} **{stop}**: {st['bookings']} reservas ({st['pax']} pax)")
+        if intent == "cancellation_notice":
+            reply_lines = [
+                f"⚠️ **Avisos de Cancelación / Alternativas — {matched_tour['name']}**",
+                f"📅 **Fecha:** {date_label}",
+                f"📊 **Total:** {len(prepared)} reserva(s) ({total_pax} pasajeros)",
+                f"ℹ️ **Motivo:** {reason}\n",
+                f"💬 **Mensajes redactados en el idioma nativo de cada cliente con opciones de reubicación y reembolso.**"
+            ]
+        else:
+            reply_lines = [
+                f"🚌 **{matched_tour['name']}** — {date_label}",
+                f"📊 **Total:** {len(prepared)} reservas ({total_pax} pasajeros)\n",
+                f"📍 **Puntos de Recogida Asignados:**"
+            ]
+            for stop, st in stops_breakdown.items():
+                icon = st.get("icon", "📍")
+                reply_lines.append(f"  {icon} **{stop}**: {st['bookings']} reservas ({st['pax']} pax)")
 
-        reply_lines.append(f"\n🌍 **Idiomas y Audioguías:**")
+        reply_lines.append(f"\n🌍 **Idiomas y Mensajes Preparados:**")
         for lang, data in lang_breakdown.items():
             reply_lines.append(f"  • {data['flag']} {lang}: {data['count']} mensajes")
 
@@ -404,7 +429,7 @@ class AssistantParser:
 
         return {
             "success": True,
-            "intent": "schedule_change",
+            "intent": intent,
             "engine": used_engine,
             "tour": matched_tour,
             "target_date": resolved_date,
