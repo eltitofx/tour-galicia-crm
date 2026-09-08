@@ -76,9 +76,9 @@ def _fuzzy_match_tour(text_lower: str, available_tours: List[Dict[str, Any]]) ->
 class AssistantParser:
     """
     Interprets natural language instructions from the operator.
-    Connects to Gemini AI to understand the intent and parameters,
+    Connects to Gemini AI or local deterministic NLP rules to understand the intent and parameters,
     matches against live TuriTop CRM data, groups bookings by pickup stop,
-    and prepares multilingual WhatsApp messages with audioguides.
+    and prepares multilingual WhatsApp messages with audioguides (only for non-ES/EN).
     """
 
     def parse_instruction(self, text: str, target_date: Optional[str] = None) -> Dict[str, Any]:
@@ -89,6 +89,7 @@ class AssistantParser:
         target_provider = None
         target_pickup = None
         new_time = None
+        new_tour_name = None
         reason = "motivos de organización"
         target_slots = []
         used_engine = "Reglas Locales"
@@ -157,13 +158,17 @@ class AssistantParser:
                 target_provider = None
 
         # 3. Fallback intent detection
+        relocation_kw = ["cambio del tour a", "cambio de tour a", "cambiar a regular", "unificar con", "reubicar en", "cambio al tour", "cambio de excursion a"]
         cancellation_kw = ["minimo", "mínimo", "no sale", "cancelar", "cancelación", "cancelacion", "cancelado", "cancelada", "suspender", "anular", "no se realiza", "no va a salir", "no hemos alcanzado"]
         review_kw = ["reseña", "reseñas", "opinion", "opiniones", "valoracion", "valoraciones", "review", "reviews", "google", "recordatorio de opinion"]
         sched_kw = ["avisa", "cambia", "unifica", "informa", "notifica", "retraso", "adelanta", "salida a las", "punto de encuentro", "enviar", "recuerda", "recordar"]
         info_kw = ["cuantos", "cuántos", "quien viene", "quién viene", "listado de", "localiza", "busca", "consultar"]
         overview_kw = ["que tours", "todos los tours", "tours de hoy", "resumen general"]
 
-        if any(kw in text_lower for kw in cancellation_kw):
+        if any(kw in text_lower for kw in relocation_kw):
+            intent = "tour_relocation"
+            new_tour_name = "Finisterre y Costa da Morte desde Santiago"
+        elif any(kw in text_lower for kw in cancellation_kw):
             intent = "cancellation_notice"
         elif any(kw in text_lower for kw in review_kw):
             intent = "review_campaign"
@@ -186,6 +191,11 @@ class AssistantParser:
             if m:
                 h, mn = m.groups()
                 new_time = f"{int(h):02d}:{mn}"
+            else:
+                m_single = re.search(r'\ba las?\s+([0-2]?\d)\b', text_lower)
+                if m_single:
+                    h = m_single.group(1)
+                    new_time = f"{int(h):02d}:00"
 
         # 6. Extract reason if mentioned
         if any(kw in text_lower for kw in ["minimo", "mínimo", "no hemos alcanzado", "participantes"]):
@@ -323,20 +333,31 @@ class AssistantParser:
         # Tour not found
         if not matched_tour:
             names = "\n".join(f"  • {t['name']}" for t in available_tours[:10])
-            reply = f"No he encontrado ningún tour coincidente en TuriTop.\n\n**Tours principales:**\n{names}\n\nPrueba por ejemplo: *'Avisa a los clientes de Finisterre del día de mañana del punto de salida'* o *'Avisa a los clientes de Finisterre express de mañana'*."
+            reply = f"No he encontrado ningún tour coincidente en TuriTop.\n\n**Tours principales:**\n{names}\n\nPrueba por ejemplo: *'Avisa a los clientes de Finisterre del día de mañana del punto de salida'* o *'Avisa a los clientes de Playa de las Catedrales de que mañana sale el tour a las 08:00'*."
             return {"success": False, "intent": intent, "engine": used_engine,
                     "assistant_reply": reply, "tour": None, "new_time": new_time,
                     "reason": reason, "target_slots": [], "total_clients": 0,
                     "languages_summary": {}, "clients": []}
 
-        # Intent: CANCELLATION / MINIMUM PARTICIPANTS / SCHEDULE CHANGE / DEPARTURE PICKUP NOTIFICATION
+        # Intent: CANCELLATION / TOUR RELOCATION / SCHEDULE CHANGE / DEPARTURE PICKUP NOTIFICATION
         all_bookings = turitop.get_bookings(
             tour_id=matched_tour["id"],
             target_date=resolved_date,
             provider_filter=target_provider,
             pickup_filter=target_pickup
         )
-        if target_slots:
+
+        # Smart slot exclusion for schedule changes (e.g. Meigas at 19:00: exclude clients ALREADY booked for 19:00)
+        excluded_already_on_time = 0
+        if intent == "schedule_change" and new_time and ("meigas" in text_lower or "cambio" in text_lower or "salida sera a las" in text_lower or "salida a las" in text_lower):
+            affected = []
+            for b in all_bookings:
+                b_slot = b.get("slot", "")
+                if b_slot == new_time:
+                    excluded_already_on_time += b.get("pax", 1)
+                else:
+                    affected.append(b)
+        elif target_slots:
             affected = [b for b in all_bookings if b["slot"] in target_slots]
         else:
             affected = all_bookings
@@ -347,9 +368,11 @@ class AssistantParser:
         total_pax = 0
 
         # Determine template category
-        if intent == "cancellation_notice":
+        if intent == "tour_relocation":
+            tpl_category = "tour_relocation"
+        elif intent == "cancellation_notice":
             tpl_category = "cancellation_notice"
-        elif new_time:
+        elif new_time and any(b.get("slot") != new_time for b in affected):
             tpl_category = "schedule_change"
         else:
             tpl_category = "departure_pickup"
@@ -371,7 +394,7 @@ class AssistantParser:
 
             msg_time = new_time if new_time else (booking.get("slot") or "09:00")
             
-            # Smart template rendering based on tour, language, reason and date
+            # Smart template rendering based on tour, language, reason, date and new tour
             msg = template_mgr.render(
                 client_name=booking["client_name"],
                 tour_name=matched_tour["name"],
@@ -382,7 +405,8 @@ class AssistantParser:
                 lang_code=lc,
                 company_name=COMPANY_NAME,
                 template_type=tpl_category,
-                date_label=date_label
+                date_label=date_label,
+                new_tour_name=new_tour_name or "Finisterre y Costa da Morte desde Santiago"
             )
 
             prepared.append({
@@ -403,7 +427,14 @@ class AssistantParser:
                 "message": msg
             })
 
-        if intent == "cancellation_notice":
+        if intent == "tour_relocation":
+            reply_lines = [
+                f"🔄 **Cambio / Reubicación de Tour: {matched_tour['name']} ➔ {new_tour_name}**",
+                f"📅 **Fecha:** {date_label}",
+                f"📊 **Total:** {len(prepared)} reserva(s) ({total_pax} pasajeros)",
+                f"💬 **Mensajes redactados en el idioma de cada cliente informando del cambio a la excursión regular completa.**"
+            ]
+        elif intent == "cancellation_notice":
             reply_lines = [
                 f"⚠️ **Avisos de Cancelación / Alternativas — {matched_tour['name']}**",
                 f"📅 **Fecha:** {date_label}",
@@ -421,9 +452,13 @@ class AssistantParser:
                 icon = st.get("icon", "📍")
                 reply_lines.append(f"  {icon} **{stop}**: {st['bookings']} reservas ({st['pax']} pax)")
 
+            if excluded_already_on_time > 0:
+                reply_lines.append(f"\n💡 _Nota: Se han excluido automáticamente {excluded_already_on_time} pasajeros que ya tenían salida a las {new_time} para no duplicar avisos._")
+
         reply_lines.append(f"\n🌍 **Idiomas y Mensajes Preparados:**")
         for lang, data in lang_breakdown.items():
-            reply_lines.append(f"  • {data['flag']} {lang}: {data['count']} mensajes")
+            audioguide_note = " (sin audioguía, guía presencial)" if lang in ["Español", "English"] else " (con enlace a audioguía)"
+            reply_lines.append(f"  • {data['flag']} {lang}: {data['count']} mensajes{audioguide_note}")
 
         reply = "\n".join(reply_lines)
 

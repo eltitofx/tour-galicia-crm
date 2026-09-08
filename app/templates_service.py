@@ -6,13 +6,14 @@ from typing import Dict, Any, List, Optional
 
 TEMPLATES_FILE = Path(__file__).resolve().parent.parent / "custom_templates.json"
 
+# Audioguide links (ES and EN DO NOT HAVE AUDIOGUIDES as tours are guided in ES/EN)
 AUDIOGUIDE_LINKS = {
-    "es": "https://audioguide.tourgalicia.es/es",
-    "en": "https://audioguide.tourgalicia.es/en",
     "fr": "https://audioguide.tourgalicia.es/fr",
     "de": "https://audioguide.tourgalicia.es/de",
+    "it": "https://audioguide.tourgalicia.es/it",
     "pt": "https://audioguide.tourgalicia.es/pt",
-    "it": "https://audioguide.tourgalicia.es/it"
+    "pl": "https://audioguide.tourgalicia.es/pl",
+    "ko": "https://audioguide.tourgalicia.es/ko"
 }
 
 REVIEW_LINKS = {
@@ -29,183 +30,259 @@ DEFAULT_SYSTEM_TEMPLATES = {
     "departure_pickup": {
         "es": (
             "👋 Hola *{nombre}*,\n\n"
-            "Te contactamos desde *{empresa}* para confirmarte los detalles de tu excursión *{tour}* de hoy:\n\n"
+            "Te contactamos desde *{empresa}* para confirmarte los detalles de tu excursión *{tour}* de {fecha_salida}:\n\n"
             "📍 *Punto de recogida / Salida:* {parada}\n"
             "⏰ *Hora de encuentro:* *{hora}*\n"
             "⚠️ _Rogamos estar presentes 10 minutos antes._\n\n"
-            "🎧 *Audioguía en tu idioma:* {audioguia}\n\n"
-            "Si tienes cualquier consulta, puedes responder a este mensaje.\n"
-            "¡Que disfrutes de la experiencia! 🚌✨"
+            "Si tienes cualquier consulta, puedes responder directamente a este mensaje.\n"
+            "¡Que disfrutes de la experiencia! 🚌✨\n\n"
+            "— *Equipo de {empresa}*"
         ),
         "en": (
             "👋 Hello *{nombre}*,\n\n"
-            "Greetings from *{empresa}*! Here are the departure details for your *{tour}* excursion today:\n\n"
+            "Greetings from *{empresa}*! Here are the departure details for your *{tour}* excursion on {fecha_salida}:\n\n"
             "📍 *Pick-up / Meeting Point:* {parada}\n"
             "⏰ *Meeting Time:* *{hora}*\n"
             "⚠️ _Please arrive 10 minutes prior to departure._\n\n"
-            "🎧 *Audioguide in your language:* {audioguia}\n\n"
             "If you have any questions, feel free to reply directly to this WhatsApp message.\n"
-            "Enjoy your tour! 🚌✨"
+            "Enjoy your tour! 🚌✨\n\n"
+            "— *{empresa} Team*"
         ),
         "fr": (
             "👋 Bonjour *{nombre}*,\n\n"
-            "De la part de *{empresa}* pour vous confirmer les détails de votre excursion *{tour}* d'aujourd'hui :\n\n"
+            "De la part de *{empresa}* pour vous confirmer les détails de votre excursion *{tour}* du {fecha_salida} :\n\n"
             "📍 *Point de rendez-vous / Prise en charge :* {parada}\n"
             "⏰ *Heure de rendez-vous :* *{hora}*\n"
             "⚠️ _Merci de vous présenter 10 minutes avant._\n\n"
             "🎧 *Audioguide en français :* {audioguia}\n\n"
-            "Bonne visite avec nous ! 🚌✨"
+            "Bonne visite avec nous ! 🚌✨\n\n"
+            "— *L'équipe {empresa}*"
         ),
         "de": (
             "👋 Hallo *{nombre}*,\n\n"
-            "hier ist *{empresa}* mit den Details für Ihren Ausflug *{tour}* heute:\n\n"
+            "hier ist *{empresa}* mit den Details für Ihren Ausflug *{tour}* am {fecha_salida}:\n\n"
             "📍 *Treffpunkt / Abholung:* {parada}\n"
             "⏰ *Abfahrtszeit:* *{hora}* Uhr\n"
             "⚠️ _Bitte seien Sie 10 Minuten vor Abfahrt vor Ort._\n\n"
             "🎧 *Audioguide auf Deutsch:* {audioguia}\n\n"
-            "Wir wünschen Ihnen ein tolles Erlebnis! 🚌✨"
+            "Wir wünschen Ihnen ein tolles Erlebnis! 🚌✨\n\n"
+            "— *{empresa}*"
         ),
         "pt": (
             "👋 Olá *{nombre}*,\n\n"
-            "Contactamos da *{empresa}* para confirmar os detalhes da sua excursão *{tour}* de hoje:\n\n"
+            "Contactamos da *{empresa}* para confirmar os detalhes da sua excursão *{tour}* de {fecha_salida}:\n\n"
             "📍 *Ponto de encontro / Paragem:* {parada}\n"
             "⏰ *Horário de saída:* *{hora}*\n"
             "⚠️ _Pedimos o favor de estar presente com 10 minutos de antecedência._\n\n"
             "🎧 *Audioguia em português:* {audioguia}\n\n"
-            "Tenha um excelente passeio! 🚌✨"
+            "Tenha um excelente passeio! 🚌✨\n\n"
+            "— *{empresa}*"
         ),
         "it": (
             "👋 Ciao *{nombre}*,\n\n"
-            "Ti contattiamo da *{empresa}* per confermarti i dettagli dell'escursione *{tour}* di oggi:\n\n"
+            "Ti contattiamo da *{empresa}* per confermarti i dettagli dell'escursione *{tour}* del {fecha_salida}:\n\n"
             "📍 *Punto di incontro / Fermata:* {parada}\n"
             "⏰ *Orario di partenza:* *{hora}*\n"
             "⚠️ _Si prega di presentarsi 10 minuti prima._\n\n"
             "🎧 *Audioguida in italiano:* {audioguia}\n\n"
-            "Buona escursione con noi! 🚌✨"
+            "Buona escursione con noi! 🚌✨\n\n"
+            "— *{empresa}*"
+        ),
+        "pl": (
+            "👋 Dzień dobry *{nombre}*,\n\n"
+            "Kontaktujemy się z *{empresa}* w sprawie wycieczki *{tour}* w dniu {fecha_salida}:\n\n"
+            "📍 *Miejsce zbiórki:* {parada}\n"
+            "⏰ *Godzina wyjazdu:* *{hora}*\n"
+            "⚠️ _Prosimy o przybycie 10 minut wcześniej._\n\n"
+            "🎧 *Przewodnik audio po polsku:* {audioguia}\n\n"
+            "Życzymy udanej wycieczki! 🚌✨\n\n"
+            "— *Zespół {empresa}*"
+        ),
+        "ko": (
+            "👋 안녕하세요 *{nombre}*님,\n\n"
+            "*{empresa}*에서 {fecha_salida} *{tour}* 투어 안내 드립니다:\n\n"
+            "📍 *미팅 장소:* {parada}\n"
+            "⏰ *출발 시간:* *{hora}*\n"
+            "⚠️ _출발 10분 전까지 도착해 주시기 바랍니다._\n\n"
+            "🎧 *한국어 오디오 가이드:* {audioguia}\n\n"
+            "즐거운 여행 되시길 바랍니다! 🚌✨\n\n"
+            "— *{empresa} 팀*"
+        )
+    },
+    "tour_relocation": {
+        "es": (
+            "👋 Hola *{nombre}*,\n\n"
+            "Te contactamos desde *{empresa}* respecto a tu reserva de *{tour}* para {fecha_salida}.\n\n"
+            "ℹ️ *Mejora y Cambio de Excursión:*\n"
+            "Para ofrecerte la mejor experiencia completa, hemos unificado tu reserva en nuestro tour regular estrella: *{nuevo_tour}*.\n\n"
+            "📍 *Punto de salida:* {parada}\n"
+            "⏰ *Hora de encuentro:* *{hora}* (estar 10 min antes).\n\n"
+            "No tienes que realizar ninguna gestión adicional. Por favor responde con un *OK* para confirmar que has recibido este aviso.\n\n"
+            "— *Equipo de {empresa}*"
+        ),
+        "en": (
+            "👋 Hello *{nombre}*,\n\n"
+            "We are contacting you from *{empresa}* regarding your booking for *{tour}* on {fecha_salida}.\n\n"
+            "ℹ️ *Tour Update & Upgrade:*\n"
+            "To provide you with the best full-day experience, your booking has been transferred to our premier regular tour: *{nuevo_tour}*.\n\n"
+            "📍 *Meeting Point:* {parada}\n"
+            "⏰ *Departure Time:* *{hora}* (please arrive 10 min early).\n\n"
+            "No additional action required. Please reply with *OK* to acknowledge this update.\n\n"
+            "— *{empresa} Team*"
+        ),
+        "fr": (
+            "👋 Bonjour *{nombre}*,\n\n"
+            "De la part de *{empresa}* concernant votre réservation pour *{tour}* le {fecha_salida}.\n\n"
+            "ℹ️ *Mise à jour de votre excursion :*\n"
+            "Votre réservation a été transférée sur notre excursion complète : *{nuevo_tour}*.\n\n"
+            "📍 *Point de rendez-vous :* {parada}\n"
+            "⏰ *Heure de départ :* *{hora}*\n\n"
+            "🎧 *Audioguide :* {audioguia}\n\n"
+            "Merci de répondre *OK* pour confirmer la bonne réception.\n\n"
+            "— *L'équipe {empresa}*"
+        ),
+        "de": (
+            "👋 Hallo *{nombre}*,\n\n"
+            "von *{empresa}* bezüglich Ihrer Buchung für *{tour}* am {fecha_salida}.\n\n"
+            "ℹ️ *Ausflugs-Upgrade & Änderung:*\n"
+            "Ihre Buchung wurde auf unsere reguläre Haupttour umgebucht: *{nuevo_tour}*.\n\n"
+            "📍 *Treffpunkt:* {parada}\n"
+            "⏰ *Abfahrtszeit:* *{hora}* Uhr\n\n"
+            "🎧 *Audioguide:* {audioguia}\n\n"
+            "Bitte antworten Sie mit *OK* zur Bestätigung.\n\n"
+            "— *{empresa}*"
+        ),
+        "pt": (
+            "👋 Olá *{nombre}*,\n\n"
+            "Da *{empresa}* referente à sua reserva de *{tour}* para {fecha_salida}.\n\n"
+            "ℹ️ *Atualização de Passeio:*\n"
+            "A sua reserva foi integrada no nosso passeio regular completo: *{nuevo_tour}*.\n\n"
+            "📍 *Ponto de encontro:* {parada}\n"
+            "⏰ *Hora de saída:* *{hora}*\n\n"
+            "🎧 *Audioguia:* {audioguia}\n\n"
+            "Por favor responda *OK* para confirmar.\n\n"
+            "— *{empresa}*"
+        ),
+        "it": (
+            "👋 Ciao *{nombre}*,\n\n"
+            "Da *{empresa}* riguardo alla tua prenotazione di *{tour}* per il {fecha_salida}.\n\n"
+            "ℹ️ *Aggiornamento Tour:*\n"
+            "La tua prenotazione è stata trasferita sul nostro tour regolare completo: *{nuevo_tour}*.\n\n"
+            "📍 *Punto di incontro:* {parada}\n"
+            "⏰ *Orario di partenza:* *{hora}*\n\n"
+            "🎧 *Audioguida:* {audioguia}\n\n"
+            "Ti preghiamo di rispondere *OK* per conferma.\n\n"
+            "— *{empresa}*"
+        ),
+        "pl": (
+            "👋 Dzień dobry *{nombre}*,\n\n"
+            "Z *{empresa}* w sprawie rezerwacji *{tour}* na dzień {fecha_salida}.\n\n"
+            "ℹ️ *Aktualizacja wycieczki:*\n"
+            "Twoja rezerwacja została przeniesiona na wycieczkę regularną: *{nuevo_tour}*.\n\n"
+            "📍 *Miejsce zbiórki:* {parada}\n"
+            "⏰ *Godzina:* *{hora}*\n\n"
+            "🎧 *Przewodnik audio:* {audioguia}\n\n"
+            "Prosimy o odpowiedź *OK* w celu potwierdzenia.\n\n"
+            "— *Zespół {empresa}*"
+        ),
+        "ko": (
+            "👋 안녕하세요 *{nombre}*님,\n\n"
+            "*{empresa}*에서 {fecha_salida} *{tour}* 예약 관련 안내 드립니다.\n\n"
+            "ℹ️ *투어 변경 안내:*\n"
+            "더 알찬 일정을 위해 예약이 정규 투어인 *{nuevo_tour}*(으)로 변경되었습니다.\n\n"
+            "📍 *미팅 장소:* {parada}\n"
+            "⏰ *출발 시간:* *{hora}*\n\n"
+            "🎧 *오디오 가이드:* {audioguia}\n\n"
+            "확인 후 *OK*라고 답장 부탁드립니다.\n\n"
+            "— *{empresa} 팀*"
         )
     },
     "schedule_change": {
         "es": (
             "👋 Hola *{nombre}*,\n\n"
-            "Te contactamos desde *{empresa}* referente a tu reserva para la excursión *{tour}* de hoy.\n\n"
+            "Te contactamos desde *{empresa}* referente a tu reserva para la excursión *{tour}* de {fecha_salida}.\n\n"
             "ℹ️ *Aviso de Horario:*\n"
             "Por {motivo}, el horario de salida será a las *{hora}*.\n\n"
             "📍 *Punto de encuentro:* {parada}\n"
             "⏰ *Nueva hora:* *{hora}* (estar 10 min antes).\n\n"
-            "🎧 *Audioguía en tu idioma:* {audioguia}\n\n"
-            "¡Muchas gracias y nos vemos pronto! 🚌✨\n"
+            "¡Muchas gracias y nos vemos pronto! 🚌✨\n\n"
             "— *Equipo de {empresa}*"
         ),
         "en": (
             "👋 Hello *{nombre}*,\n\n"
-            "We are contacting you from *{empresa}* regarding your booking for the *{tour}* tour today.\n\n"
+            "We are contacting you from *{empresa}* regarding your booking for the *{tour}* excursion on {fecha_salida}.\n\n"
             "ℹ️ *Schedule Update:*\n"
             "Due to {motivo}, your updated departure time is now *{hora}*.\n\n"
             "📍 *Meeting Point:* {parada}\n"
             "⏰ *New time:* *{hora}* (please arrive 10 min early).\n\n"
-            "🎧 *Audioguide in your language:* {audioguia}\n\n"
-            "Thank you, see you soon! 🚌✨\n"
+            "Thank you, see you soon! 🚌✨\n\n"
             "— *{empresa} Team*"
         ),
         "fr": (
             "👋 Bonjour *{nombre}*,\n\n"
-            "De la part de *{empresa}* concernant votre réservation pour *{tour}* aujourd'hui.\n\n"
+            "De la part de *{empresa}* concernant votre réservation pour *{tour}* le {fecha_salida}.\n\n"
             "ℹ️ *Mise à jour horaire :*\n"
             "Pour {motivo}, votre nouvel horaire de départ est à *{hora}*.\n\n"
             "📍 *Point de rendez-vous :* {parada}\n"
             "⏰ *Nouvelle heure :* *{hora}* (merci d'arriver 10 min avant).\n\n"
             "🎧 *Audioguide :* {audioguia}\n\n"
-            "Merci et à très bientôt ! 🚌✨\n"
+            "Merci et à très bientôt ! 🚌✨\n\n"
             "— *L'équipe {empresa}*"
         ),
         "de": (
             "👋 Hallo *{nombre}*,\n\n"
-            "wir kontaktieren Sie von *{empresa}* bezüglich Ihrer Buchung für *{tour}* heute.\n\n"
+            "wir kontaktieren Sie von *{empresa}* bezüglich Ihrer Buchung für *{tour}* am {fecha_salida}.\n\n"
             "ℹ️ *Fahrplanänderung:*\n"
             "Aus {motivo} ist die neue Abfahrtszeit um *{hora}* Uhr.\n\n"
             "📍 *Treffpunkt:* {parada}\n"
             "⏰ *Neue Zeit:* *{hora}* Uhr (bitte 10 min vorher da sein).\n\n"
             "🎧 *Audioguide:* {audioguia}\n\n"
-            "Vielen Dank! 🚌✨\n"
+            "Vielen Dank! 🚌✨\n\n"
             "— *{empresa}*"
         ),
         "pt": (
             "👋 Olá *{nombre}*,\n\n"
-            "Da *{empresa}* referente à sua reserva para *{tour}* hoje.\n\n"
+            "Da *{empresa}* referente à sua reserva para *{tour}* em {fecha_salida}.\n\n"
             "ℹ️ *Aviso de Horário:*\n"
             "Por {motivo}, a hora de saída será às *{hora}*.\n\n"
             "📍 *Ponto de encontro:* {parada}\n"
             "⏰ *Nova hora:* *{hora}* (chegar 10 min antes).\n\n"
             "🎧 *Audioguia:* {audioguia}\n\n"
-            "Muito obrigado! 🚌✨\n"
+            "Muito obrigado! 🚌✨\n\n"
             "— *{empresa}*"
         ),
         "it": (
             "👋 Ciao *{nombre}*,\n\n"
-            "Da *{empresa}* in merito all'escursione *{tour}* di oggi.\n\n"
+            "Da *{empresa}* in merito all'escursione *{tour}* del {fecha_salida}.\n\n"
             "ℹ️ *Avviso di orario:*\n"
             "Per {motivo}, l'orario di partenza sarà alle *{hora}*.\n\n"
             "📍 *Punto di incontro:* {parada}\n"
             "⏰ *Nuovo orario:* *{hora}* (presentarsi 10 min prima).\n\n"
             "🎧 *Audioguida:* {audioguia}\n\n"
-            "Grazie e a presto! 🚌✨\n"
-            "— *{empresa}*"
-        )
-    },
-    "review_request": {
-        "es": (
-            "👋 ¡Hola *{nombre}*!\n\n"
-            "Esperamos que hayas disfrutado al máximo de tu excursión *{tour}* con *{empresa}* ⭐.\n\n"
-            "Tu opinión es fundamental para nosotros y ayuda a futuros viajeros. ¿Nos regalarías 1 minuto para valorar tu experiencia en *{plataforma}*?\n\n"
-            "✍️ *Deja tu reseña aquí:* 👇\n"
-            "👉 {enlace_resena}\n\n"
-            "¡Muchísimas gracias por viajar con nosotros y esperamos verte pronto de nuevo en Galicia! 💙🚌✨\n"
-            "— *Equipo de {empresa}*"
-        ),
-        "en": (
-            "👋 Hello *{nombre}*!\n\n"
-            "We hope you had a wonderful experience on your *{tour}* tour with *{empresa}* ⭐.\n\n"
-            "Your feedback means a lot to our team and helps other travelers. Could you take 1 minute to rate your experience on *{plataforma}*?\n\n"
-            "✍️ *Leave your review here:* 👇\n"
-            "👉 {enlace_resena}\n\n"
-            "Thank you so much for joining us and we hope to welcome you back to Galicia! 💙🚌✨\n"
-            "— *{empresa} Team*"
-        ),
-        "fr": (
-            "👋 Bonjour *{nombre}* !\n\n"
-            "Nous espérons que vous avez passé un excellent moment lors de votre excursion *{tour}* avec *{empresa}* ⭐.\n\n"
-            "Votre avis compte énormément pour nous. Pourriez-vous nous accorder 1 minute pour partager votre expérience sur *{plataforma}* ?\n\n"
-            "✍️ *Laissez votre avis ici :* 👇\n"
-            "👉 {enlace_resena}\n\n"
-            "Merci beaucoup d'avoir voyagé avec nous et à bientôt en Galice ! 💙🚌✨\n"
-            "— *L'équipe {empresa}*"
-        ),
-        "de": (
-            "👋 Hallo *{nombre}*!\n\n"
-            "Wir hoffen, Sie hatten ein fantastisches Erlebnis bei Ihrem Ausflug *{tour}* mit *{empresa}* ⭐.\n\n"
-            "Ihre Meinung ist uns sehr wichtig. Dürfen wir Sie um 1 Minute für ein kurzes Feedback auf *{plataforma}* bitten?\n\n"
-            "✍️ *Bewertung hier abgeben:* 👇\n"
-            "👉 {enlace_resena}\n\n"
-            "Vielen Dank und bis zum nächsten Mal in Galizien! 💙🚌✨\n"
+            "Grazie e a presto! 🚌✨\n\n"
             "— *{empresa}*"
         ),
-        "pt": (
-            "👋 Olá *{nombre}*!\n\n"
-            "Esperamos que tenha desfrutado ao máximo do seu passeio *{tour}* com a *{empresa}* ⭐.\n\n"
-            "A sua avaliação é muito importante para nós. Poderia dispensar 1 minuto para partilhar a sua experiência no *{plataforma}*?\n\n"
-            "✍️ *Deixe a sua avaliação aqui:* 👇\n"
-            "👉 {enlace_resena}\n\n"
-            "Muito obrigado por viajar connosco e até breve na Galiza! 💙🚌✨\n"
-            "— *{empresa}*"
+        "pl": (
+            "👋 Dzień dobry *{nombre}*,\n\n"
+            "Z *{empresa}* w sprawie wycieczki *{tour}* w dniu {fecha_salida}.\n\n"
+            "ℹ️ *Zmiana godziny:*\n"
+            "Z powodu: {motivo}, nowa godzina wyjazdu to *{hora}*.\n\n"
+            "📍 *Miejsce zbiórki:* {parada}\n"
+            "⏰ *Nowa godzina:* *{hora}*\n\n"
+            "🎧 *Przewodnik audio:* {audioguia}\n\n"
+            "Dziękujemy! 🚌✨\n\n"
+            "— *Zespół {empresa}*"
         ),
-        "it": (
-            "👋 Ciao *{nombre}*!\n\n"
-            "Speriamo che la tua escursione *{tour}* con *{empresa}* sia stata un'esperienza fantastica ⭐.\n\n"
-            "La tua opinione è preziosa per noi e per altri viaggiatori. Ci dedicheresti 1 minuto per lasciare una recensione su *{plataforma}*?\n\n"
-            "✍️ *Lascia la tua recensione qui:* 👇\n"
-            "👉 {enlace_resena}\n\n"
-            "Grazie di cuore per aver viaggiato con noi e a presto in Galizia! 💙🚌✨\n"
-            "— *{empresa}*"
+        "ko": (
+            "👋 안녕하세요 *{nombre}*님,\n\n"
+            "*{empresa}*에서 {fecha_salida} *{tour}* 투어 일정 변경 안내 드립니다.\n\n"
+            "ℹ️ *시간 변경 안내:*\n"
+            "{motivo} 사유로 출발 시간이 *{hora}*(으)로 변경되었습니다.\n\n"
+            "📍 *미팅 장소:* {parada}\n"
+            "⏰ *새로운 출발 시간:* *{hora}*\n\n"
+            "🎧 *오디오 가이드:* {audioguia}\n\n"
+            "감사합니다! 🚌✨\n\n"
+            "— *{empresa} 팀*"
         )
     },
     "cancellation_notice": {
@@ -274,6 +351,102 @@ DEFAULT_SYSTEM_TEMPLATES = {
             "2️⃣ *Rimborso integrale* immediato della prenotazione.\n\n"
             "Ci scusiamo per il disagio.\n\n"
             "— *{empresa}*"
+        ),
+        "pl": (
+            "👋 Dzień dobry *{nombre}*,\n\n"
+            "Z *{empresa}* w sprawie rezerwacji *{tour}* na dzień {fecha_salida}.\n\n"
+            "ℹ️ *Ważna informacja:*\n"
+            "Z przykrością informujemy, że z powodu: *{motivo}*, ta wycieczka nie odbędzie się.\n\n"
+            "Prosimy o odpowiedź na tę wiadomość w celu wyboru opcji:\n"
+            "1️⃣ *Przebukowanie* na inną wycieczkę.\n"
+            "2️⃣ *Pełny zwrot wpłaty* natychmiast.\n\n"
+            "Przepraszamy za niedogodności.\n\n"
+            "— *Zespół {empresa}*"
+        ),
+        "ko": (
+            "👋 안녕하세요 *{nombre}*님,\n\n"
+            "*{empresa}*에서 {fecha_salida} *{tour}* 예약 관련 중요 안내 드립니다.\n\n"
+            "ℹ️ *투어 취소 안내:*\n"
+            "안타깝게도 *{motivo}* 사유로 인해 본 투어 진행이 어렵게 되었습니다.\n\n"
+            "아래 옵션 중 원하시는 방식을 본 메시지로 회신 부탁드립니다:\n"
+            "1️⃣ 다른 투어 일정으로 *변경*\n"
+            "2️⃣ 예약금 *전액 즉시 환불*\n\n"
+            "이용에 불편을 드려 진심으로 사과드립니다.\n\n"
+            "— *{empresa} 팀*"
+        )
+    },
+    "review_request": {
+        "es": (
+            "👋 ¡Hola *{nombre}*!\n\n"
+            "Esperamos que hayas disfrutado al máximo de tu excursión *{tour}* con *{empresa}* ⭐.\n\n"
+            "Tu opinión es fundamental para nosotros y ayuda a futuros viajeros. ¿Nos regalarías 1 minuto para valorar tu experiencia en *{plataforma}*?\n\n"
+            "✍️ *Deja tu reseña aquí:* 👇\n"
+            "👉 {enlace_resena}\n\n"
+            "¡Muchísimas gracias por viajar con nosotros y esperamos verte pronto de nuevo en Galicia! 💙🚌✨\n\n"
+            "— *Equipo de {empresa}*"
+        ),
+        "en": (
+            "👋 Hello *{nombre}*!\n\n"
+            "We hope you had a wonderful experience on your *{tour}* tour with *{empresa}* ⭐.\n\n"
+            "Your feedback means a lot to our team and helps other travelers. Could you take 1 minute to rate your experience on *{plataforma}*?\n\n"
+            "✍️ *Leave your review here:* 👇\n"
+            "👉 {enlace_resena}\n\n"
+            "Thank you so much for joining us and we hope to welcome you back to Galicia! 💙🚌✨\n\n"
+            "— *{empresa} Team*"
+        ),
+        "fr": (
+            "👋 Bonjour *{nombre}* !\n\n"
+            "Nous espérons que vous avez passé un excellent moment lors de votre excursion *{tour}* avec *{empresa}* ⭐.\n\n"
+            "Votre avis compte énormément pour nous. Pourriez-vous nous accorder 1 minute pour partager votre expérience sur *{plataforma}* ?\n\n"
+            "✍️ *Laissez votre avis ici :* 👇\n"
+            "👉 {enlace_resena}\n\n"
+            "Merci beaucoup d'avoir voyagé avec nous et à bientôt en Galice ! 💙🚌✨\n\n"
+            "— *L'équipe {empresa}*"
+        ),
+        "de": (
+            "👋 Hallo *{nombre}*!\n\n"
+            "Wir hoffen, Sie hatten ein fantastisches Erlebnis bei Ihrem Ausflug *{tour}* mit *{empresa}* ⭐.\n\n"
+            "Ihre Meinung ist uns sehr wichtig. Dürfen wir Sie um 1 Minute für ein kurzes Feedback auf *{plataforma}* bitten?\n\n"
+            "✍️ *Bewertung hier abgeben:* 👇\n"
+            "👉 {enlace_resena}\n\n"
+            "Vielen Dank und bis zum nächsten Mal in Galizien! 💙🚌✨\n\n"
+            "— *{empresa}*"
+        ),
+        "pt": (
+            "👋 Olá *{nombre}*!\n\n"
+            "Esperamos que tenha desfrutado ao máximo do seu passeio *{tour}* com a *{empresa}* ⭐.\n\n"
+            "A sua avaliação é muito importante para nós. Poderia dispensar 1 minuto para partilhar a sua experiência no *{plataforma}*?\n\n"
+            "✍️ *Deixe a sua avaliação aqui:* 👇\n"
+            "👉 {enlace_resena}\n\n"
+            "Muito obrigado por viajar connosco e até breve na Galiza! 💙🚌✨\n\n"
+            "— *{empresa}*"
+        ),
+        "it": (
+            "👋 Ciao *{nombre}*!\n\n"
+            "Speriamo che la tua escursione *{tour}* con *{empresa}* sia stata un'esperienza fantastica ⭐.\n\n"
+            "La tua opinione è preziosa per noi e per altri viaggiatori. Ci dedicheresti 1 minuto per lasciare una recensione su *{plataforma}*?\n\n"
+            "✍️ *Lascia la tua recensione qui:* 👇\n"
+            "👉 {enlace_resena}\n\n"
+            "Grazie di cuore per aver viaggiato con noi e a presto in Galizia! 💙🚌✨\n\n"
+            "— *{empresa}*"
+        ),
+        "pl": (
+            "👋 Dzień dobry *{nombre}*!\n\n"
+            "Mamy nadzieję, że wycieczka *{tour}* z *{empresa}* była wspaniałym przeżyciem ⭐.\n\n"
+            "Twoja opinia jest dla nas bezcenna. Czy poświęcisz 1 minutę na ocenę na *{plataforma}*?\n\n"
+            "✍️ *Zostaw swoją opinię tutaj:* 👇\n"
+            "👉 {enlace_resena}\n\n"
+            "Dziękujemy i do zobaczenia ponownie w Galicji! 💙🚌✨\n\n"
+            "— *Zespół {empresa}*"
+        ),
+        "ko": (
+            "👋 안녕하세요 *{nombre}*님!\n\n"
+            "*{empresa}*와 함께한 *{tour}* 투어가 좋은 추억이 되셨기를 바랍니다 ⭐.\n\n"
+            "소중한 후기는 다른 여행자들에게 큰 도움이 됩니다. *{plataforma}*에 1분만 시간 내어 후기를 남겨주시겠어요?\n\n"
+            "✍️ *후기 작성 링크:* 👇\n"
+            "👉 {enlace_resena}\n\n"
+            "함께해 주셔서 진심으로 감사드리며 다시 만나 뵙기를 기대합니다! 💙🚌✨\n\n"
+            "— *{empresa} 팀*"
         )
     }
 }
@@ -286,6 +459,7 @@ class TemplateManager:
     def _load(self) -> Dict[str, Any]:
         result = {
             "departure_pickup": DEFAULT_SYSTEM_TEMPLATES["departure_pickup"].copy(),
+            "tour_relocation": DEFAULT_SYSTEM_TEMPLATES["tour_relocation"].copy(),
             "schedule_change": DEFAULT_SYSTEM_TEMPLATES["schedule_change"].copy(),
             "cancellation_notice": DEFAULT_SYSTEM_TEMPLATES["cancellation_notice"].copy(),
             "review_request": DEFAULT_SYSTEM_TEMPLATES["review_request"].copy(),
@@ -297,8 +471,7 @@ class TemplateManager:
                 with open(TEMPLATES_FILE, "r", encoding="utf-8") as f:
                     loaded = json.load(f)
                     if isinstance(loaded, dict):
-                        # Merge departure_pickup / schedule_change / cancellation_notice / review_request
-                        for key in ["departure_pickup", "schedule_change", "cancellation_notice", "review_request"]:
+                        for key in ["departure_pickup", "tour_relocation", "schedule_change", "cancellation_notice", "review_request"]:
                             if key in loaded and isinstance(loaded[key], dict):
                                 result[key].update(loaded[key])
                         if "custom_templates" in loaded and isinstance(loaded["custom_templates"], list):
@@ -321,7 +494,7 @@ class TemplateManager:
         return self.data
 
     def save_base_templates(self, templates_dict: Dict[str, Any]) -> bool:
-        for key in ["departure_pickup", "schedule_change", "review_request"]:
+        for key in ["departure_pickup", "tour_relocation", "schedule_change", "cancellation_notice", "review_request"]:
             if key in templates_dict:
                 self.data[key] = templates_dict[key]
         return self._save_to_disk()
@@ -342,7 +515,6 @@ class TemplateManager:
             "content": tpl.get("content", "").strip()
         }
 
-        # Check if updating existing
         existing_idx = next((i for i, t in enumerate(self.data["custom_templates"]) if t.get("id") == tpl_id), None)
         if existing_idx is not None:
             self.data["custom_templates"][existing_idx] = new_entry
@@ -405,7 +577,8 @@ class TemplateManager:
         template_type: str = "departure_pickup",
         review_link: str = "",
         platform_name: str = "Google",
-        date_label: str = "mañana"
+        date_label: str = "mañana",
+        new_tour_name: str = ""
     ) -> str:
         template = self.find_best_template(
             tour_id=tour_id,
@@ -417,13 +590,13 @@ class TemplateManager:
         if not template:
             template = (
                 "👋 Hola *{nombre}*,\n\n"
-                "Confirmamos tu excursión *{tour}* con salida a las *{hora}* en *{parada}*.\n"
-                "🎧 Audioguía: {audioguia}\n\n"
+                "Confirmamos tu excursión *{tour}* con salida a las *{hora}* en *{parada}*.\n\n"
                 "— *{empresa}*"
             )
 
-        audioguide = AUDIOGUIDE_LINKS.get(lang_code, AUDIOGUIDE_LINKS.get("en", "https://audioguide.tourgalicia.es/es"))
+        audioguide = AUDIOGUIDE_LINKS.get(lang_code, "")
         rev_link = review_link or REVIEW_LINKS.get("default")
+        target_new_tour = new_tour_name or "Finisterre y Costa da Morte desde Santiago"
 
         rendered = template
         replacements = {
@@ -435,6 +608,8 @@ class TemplateManager:
             "{pickup_stop}": pickup_stop or "Punto de salida habitual",
             "{tour}": tour_name,
             "{tour_name}": tour_name,
+            "{nuevo_tour}": target_new_tour,
+            "{new_tour}": target_new_tour,
             "{motivo}": reason or "motivos de organización",
             "{reason}": reason or "motivos de organización",
             "{empresa}": company_name,

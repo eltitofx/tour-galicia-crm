@@ -1,0 +1,65 @@
+[
+  {
+    "id": "hk_catedrales_0800",
+    "title": "🏖️ Catedrales 08:00 mañana",
+    "description": "Aviso de salida a las 08:00 para Playa de las Catedrales de mañana",
+    "icon": "🏖️",
+    "color": "bg-blue-50 text-blue-700 border-blue-300 hover:bg-blue-100",
+    "prompt": "Avisa a los clientes de la Playa de las Catedrales de que mañana sale el tour a las 08:00",
+    "auto_execute": true
+  },
+  {
+    "id": "hk_meigas_1900",
+    "title": "🌙 Meigas a las 19:00 (Cambio hora)",
+    "description": "Cambio de hora a las 19:00 para Meigas (solo avisa a clientes de otras horas)",
+    "icon": "🌙",
+    "color": "bg-purple-50 text-purple-700 border-purple-300 hover:bg-purple-100",
+    "prompt": "Avisa a los clientes del Tour de Meigas de hoy que la salida sera a las 19:00",
+    "auto_execute": true
+  },
+  {
+    "id": "hk_cambio_finisterre_regular",
+    "title": "🔄 Finisterre Express a Regular",
+    "description": "Avisa del cambio de Finisterre Express a Finisterre Costa da Morte Regular",
+    "icon": "🔄",
+    "color": "bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100",
+    "prompt": "Avisa a los clientes de Finisterre Express de mañana del cambio del tour a Finisterre Costa da Morte regular desde Santiago",
+    "auto_execute": true
+  },
+  {
+    "id": "hk_finisterre_salidas_manana",
+    "title": "🚌 Finisterre Salidas Mañana",
+    "description": "Aviso de paradas y horas de salida para Finisterre mañana",
+    "icon": "🚌",
+    "color": "bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100",
+    "prompt": "Avisa a los clientes de Finisterre y Costa da Morte de mañana del punto de salida",
+    "auto_execute": true
+  },
+  {
+    "id": "hk_rias_baixas_hoy",
+    "title": "🌊 Rías Baixas Salidas Hoy",
+    "description": "Aviso de salida para Rías Baixas hoy",
+    "icon": "🌊",
+    "color": "bg-cyan-50 text-cyan-800 border-cyan-300 hover:bg-cyan-100",
+    "prompt": "Avisa a los clientes de Rías Baixas de hoy del punto de salida",
+    "auto_execute": true
+  },
+  {
+    "id": "hk_minimo_finisterre_express",
+    "title": "⚠️ Falta Mínimo Finisterre Express",
+    "description": "Aviso de cancelación por no alcanzar mínimo de pax para Finisterre Express mañana",
+    "icon": "⚠️",
+    "color": "bg-rose-50 text-rose-800 border-rose-300 hover:bg-rose-100",
+    "prompt": "Avisa a todos los clientes del tour Finisterre Express que no hemos alcanzado el numero minimo de participantes para mañana",
+    "auto_execute": true
+  },
+  {
+    "id": "hk_resenas_ayer",
+    "title": "⭐ Solicitar Reseñas de Ayer",
+    "description": "Pide reseñas a los clientes que viajaron ayer según su plataforma e idioma",
+    "icon": "⭐",
+    "color": "bg-yellow-50 text-yellow-800 border-yellow-300 hover:bg-yellow-100",
+    "prompt": "Solicita una reseña a los clientes que viajaron ayer con nosotros acorde a su plataforma e idioma",
+    "auto_execute": true
+  }
+]

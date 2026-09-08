@@ -12,6 +12,7 @@ from app.whatsapp_service import whatsapp
 from app.templates_service import template_mgr
 from app.gemini_service import gemini
 from app.auth_service import auth_service
+from app.hotkeys_service import hotkeys_mgr
 
 app = FastAPI(title="Tour Galicia - Panel de Operaciones & WhatsApp CRM", version="1.0.0")
 
@@ -22,6 +23,15 @@ class LoginRequest(BaseModel):
 class AssistantPromptRequest(BaseModel):
     prompt: str
     target_date: Optional[str] = None
+
+class HotkeyModel(BaseModel):
+    id: Optional[str] = None
+    title: str
+    description: Optional[str] = ""
+    icon: Optional[str] = "⚡"
+    color: Optional[str] = "bg-blue-50 text-blue-700 border-blue-300 hover:bg-blue-100"
+    prompt: str
+    auto_execute: Optional[bool] = True
 
 class BroadcastRequest(BaseModel):
     messages: List[Dict[str, Any]]
@@ -353,6 +363,23 @@ def add_custom_template(req: CustomTemplateModel):
 @app.delete("/api/templates/custom/{tpl_id}")
 def delete_custom_template(tpl_id: str):
     success = template_mgr.delete_custom_template(tpl_id)
+    return {"success": success}
+
+# ==========================================
+# HOTKEYS / ACCIONES RÁPIDAS
+# ==========================================
+@app.get("/api/hotkeys")
+def get_hotkeys():
+    return hotkeys_mgr.get_all()
+
+@app.post("/api/hotkeys")
+def save_hotkey(req: HotkeyModel):
+    saved = hotkeys_mgr.add_or_update(req.dict())
+    return {"success": True, "hotkey": saved}
+
+@app.delete("/api/hotkeys/{hk_id}")
+def delete_hotkey(hk_id: str):
+    success = hotkeys_mgr.delete(hk_id)
     return {"success": success}
 
 @app.post("/api/gemini/config")
